@@ -11,6 +11,9 @@ declare(strict_types=1);
 			$this->RequireParent('{4CB91589-CE01-4700-906F-26320EFCF6C4}');
 			$this->RegisterTimer("RefreshTimer", 5000, 'JCD_RefreshData();');	
 
+			$this->RegisterPropertyString("Username", "");
+			$this->RegisterPropertyString("Passwort", "");
+
 			$this->RegisterVariableString("DeviceID", "ID des Geräts", "");
 			$this->RegisterVariableString("DeviceType", "Typ des Geräts", "");
 
@@ -59,6 +62,16 @@ declare(strict_types=1);
 
 		public function RefreshData()
 		{
-			IPS_LogMessage($_IPS['SELF'], "RefreshData() started.");
+			IPS_LogMessage('RefreshData() called!');
+			$url = 'https://www.myjudo.eu';
+
+			$username = $this->ReadPropertyString("Username");
+			$passwd = $this->ReadPropertyString("Passwort");
+		
+		
+			$loginUrl = $url . '/interface/?group=register&command=login&name=login&user=' . $username . '&password=' . md5($passwd, false) . '&nohash=' . $passwd . '&role=customer';
+		
+			$this->Send('GET', $loginUrl, '', 5000);
+			$response = $wc->Navigate($loginUrl);
 		}
 	}
