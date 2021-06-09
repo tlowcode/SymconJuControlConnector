@@ -1,0 +1,16 @@
+{
+    "id": "{017837A8-4FBD-DA9C-8A3A-EEE53D12DA69}",
+    "name": "JuControlDevice",
+    "type": 3,
+    "vendor": "",
+    "aliases": [],
+    "parentRequirements": [
+        "{D4C1D08F-CD3B-494B-BE18-B36EF73B8F43}"
+    ],
+    "childRequirements": [],
+    "implemented": [
+        "{018EF6B5-AB94-40C6-AA53-46943E824ACF}"
+    ],
+    "prefix": "JCD",
+    "url": ""
+}

@@ -1,0 +1,31 @@
+{
+    "elements": [],
+    "actions": [
+        {
+            "name": "RequestMethod",
+            "type": "ValidationTextBox",
+            "caption": "Reques Method"
+        },
+        {
+            "name": "RequestURL",
+            "type": "ValidationTextBox",
+            "caption": "Request URL"
+        },
+        {
+            "name": "RequestData",
+            "type": "ValidationTextBox",
+            "caption": "Request Data"
+        },
+        {
+            "name": "Timeout",
+            "type": "NumberSpinner",
+            "caption": "Timeout"
+        },
+        {
+            "type": "Button",
+            "caption": "Send",
+            "onClick": "JCD_Send($id, $RequestMethod, $RequestURL, $RequestData, $Timeout);"
+        }
+    ],
+    "status": []
+}
