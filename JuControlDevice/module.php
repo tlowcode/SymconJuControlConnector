@@ -10,6 +10,28 @@ declare(strict_types=1);
 
 			$this->RequireParent('{4CB91589-CE01-4700-906F-26320EFCF6C4}');
 			$this->RegisterTimer("RefreshTimer", 5000, 'JCD_RefreshData();');	
+
+			$this->RegisterVariableString("DeviceID", "ID des Geräts", "");
+			$this->RegisterVariableString("DeviceType", "Typ des Geräts", "");
+
+		/*
+			public $deviceState = '';
+			public $deviceSN = '';  
+			public $targetHardness = 0;
+			public $inputHardness = 0;
+			public $rangeSaltPercent = 0;
+			public $currentFlow = 0;
+			public $batteryState = 0;
+			public $activeScene = '';
+			public $swVersion = '';
+			public $hwVersion = '';
+			public $ccuVersion = '';
+			public $nextService = '';
+			public $hasEmergencySupply = false;
+			public $totalWater = 0;
+			public $totalRegenaration = 0;
+			public $totalService = 0;
+			*/
 		}
 
 		public function Destroy()
