@@ -62,7 +62,7 @@ declare(strict_types=1);
 
 		public function RefreshData()
 		{
-			IPS_LogMessage($_IPS['SELF'], 'RefreshData() called!');
+			
 			$url = 'https://www.myjudo.eu';
 
 			$username = $this->ReadPropertyString("Username");
@@ -72,6 +72,7 @@ declare(strict_types=1);
 			$loginUrl = $url . '/interface/?group=register&command=login&name=login&user=' . $username . '&password=' . md5($passwd, false) . '&nohash=' . $passwd . '&role=customer';
 		
 			$this->Send('GET', $loginUrl, '', 5000);
-			$response = $wc->Navigate($loginUrl);
+
+			IPS_LogMessage($_IPS['SELF'], 'RefreshData() called! Username: '. $username . 'PW: ' . $passwd . 'URL: ' . $loginUrl);
 		}
 	}
