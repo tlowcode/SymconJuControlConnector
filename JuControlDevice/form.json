@@ -19,7 +19,7 @@
         {
             "type": "Button",
             "caption": "RefreshData",
-            "onClick": "JCD_RefreshData();"
+            "onClick": "JCD_RefreshData($id);"
         }
     ],
     "status": []
