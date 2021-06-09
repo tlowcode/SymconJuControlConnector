@@ -9,6 +9,7 @@ declare(strict_types=1);
 			parent::Create();
 
 			$this->RequireParent('{4CB91589-CE01-4700-906F-26320EFCF6C4}');
+			$this->RegisterTimer("RefreshTimer", 5000, 'JCD_RefreshData();');	
 		}
 
 		public function Destroy()
@@ -32,5 +33,10 @@ declare(strict_types=1);
 		{
 			$data = json_decode($JSONString);
 			IPS_LogMessage('Device RECV', utf8_decode($data->Buffer . ' - ' . $data->RequestMethod . ' - ' . $data->RequestURL . ' - ' . $data->RequestData . ' - ' . $data->Timeout));
+		}
+
+		public function RefreshData()
+		{
+			IPS_LogMessage($_IPS['SELF'], "RefreshData() started.");
 		}
 	}
