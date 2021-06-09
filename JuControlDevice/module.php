@@ -62,7 +62,7 @@ declare(strict_types=1);
 
 		public function RefreshData()
 		{
-			IPS_LogMessage('RefreshData() called!');
+			IPS_LogMessage($_IPS['SELF'], 'RefreshData() called!');
 			$url = 'https://www.myjudo.eu';
 
 			$username = $this->ReadPropertyString("Username");
