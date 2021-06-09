@@ -2,29 +2,24 @@
     "elements": [],
     "actions": [
         {
-            "name": "RequestMethod",
+            "name": "Username",
             "type": "ValidationTextBox",
-            "caption": "Reques Method"
+            "caption": "Username"
         },
         {
-            "name": "RequestURL",
+            "name": "Passwort",
             "type": "ValidationTextBox",
-            "caption": "Request URL"
-        },
-        {
-            "name": "RequestData",
-            "type": "ValidationTextBox",
-            "caption": "Request Data"
-        },
-        {
-            "name": "Timeout",
-            "type": "NumberSpinner",
-            "caption": "Timeout"
+            "caption": "Passwort"
         },
         {
             "type": "Button",
             "caption": "Send",
             "onClick": "JCD_Send($id, $RequestMethod, $RequestURL, $RequestData, $Timeout);"
+        },
+        {
+            "type": "Button",
+            "caption": "RefreshData",
+            "onClick": "JCD_RefreshData();"
         }
     ],
     "status": []
