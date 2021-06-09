@@ -1,26 +1,32 @@
 {
-    "elements": [],
+    "elements": [
+        {
+            "type": "ExpansionPanel",
+            "caption": "Advanced Settings",
+            "items": [
+                {
+                    "name": "Username",
+                    "type": "ValidationTextBox",
+                    "caption": "Username"
+                },
+                {
+                    "name": "Passwort",
+                    "type": "PasswordTextBox",
+                    "caption": "Passwort"
+                }
+            ]
+        }
+    ],
     "actions": [
         {
-            "name": "Username",
-            "type": "ValidationTextBox",
-            "caption": "Username"
-        },
-        {
-            "name": "Passwort",
-            "type": "ValidationTextBox",
-            "caption": "Passwort"
-        },
-        {
             "type": "Button",
-            "caption": "Send",
-            "onClick": "JCD_Send($id, $RequestMethod, $RequestURL, $RequestData, $Timeout);"
-        },
-        {
-            "type": "Button",
-            "caption": "RefreshData",
+            "caption": "Test Connection!",
             "onClick": "JCD_RefreshData($id);"
         }
     ],
-    "status": []
+    "status":
+    [
+        { "code": 102, "icon": "active", "caption": "Login information valid!" },
+        { "code": 201, "icon": "error", "caption": "Authentication failed!" }
+    ]
 }
