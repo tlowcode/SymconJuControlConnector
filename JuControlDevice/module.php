@@ -63,7 +63,7 @@ require_once('Webclient.php');
 			}
 			else {
 				$json = json_decode($response);
-				if(isset($json['status']) && $json->status == 'ok')
+				if(isset($json->status) && $json->status == 'ok')
 				{
 					/* Parse response */
 					if ($json->data[0]->data[0]->dt == '0x33')
@@ -117,7 +117,7 @@ require_once('Webclient.php');
 			else 
 			{
 				$json = json_decode($response);
-				if (isset( $json['status']) && $json->status == 'ok')
+				if (isset($json->status) && $json->status == 'ok')
 				{
 					IPS_LogMessage($this->InstanceID, 'Login successful, Token: '. $json->token);
 					$this->WriteAttributeString("AccessToken", $json->token);
