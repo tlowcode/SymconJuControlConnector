@@ -10,8 +10,6 @@ require_once('Webclient.php');
 			//Never delete this line!
 			parent::Create();
 
-			$this->RequireParent('{4CB91589-CE01-4700-906F-26320EFCF6C4}');
-
 			$this->RegisterAttributeString("AccessToken", "noToken");
 
 			$this->RegisterTimer("RefreshTimer", 0, 'JCD_RefreshData('. $this->InstanceID . ');');	
