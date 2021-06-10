@@ -53,9 +53,9 @@ require_once('Webclient.php');
 
 		public function RefreshData()
 		{
-
+			$wc = new WebClient();
 			$url = 'https://www.myjudo.eu';
-			$deviceDataUrl = $url . '/interface/?token=' . $accessToken . '&group=register&command=get%20device%20data';
+			$deviceDataUrl = $url . '/interface/?token=' . $this->ReadAttributeString("AccessToken") . '&group=register&command=get%20device%20data';
 			$response = $wc->Navigate($deviceDataUrl);
 	
 			if ($response === FALSE) {
