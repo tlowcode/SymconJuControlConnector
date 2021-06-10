@@ -65,7 +65,7 @@ require_once('Webclient.php');
 			}
 			else {
 				$json = json_decode($response);
-				if(isset( $json['status'] && $json->status == 'ok')
+				if(isset($json['status']) && $json->status == 'ok')
 				{
 					/* Parse response */
 					if ($json->data[0]->data[0]->dt == '0x33')
@@ -80,10 +80,10 @@ require_once('Webclient.php');
 					}
 			
 					/* Device S/N */
-					SetValue($this->GetIDForIdent("deviceState"), $json->data[0]->serialnumber;);
+					SetValue($this->GetIDForIdent("deviceState"), $json->data[0]->serialnumber);
 			
 					/* Device state */
-					SetValue($this->GetIDForIdent("deviceSN"), $json->data[0]->status;;);
+					SetValue($this->GetIDForIdent("deviceSN"), $json->data[0]->status);
 
 				}
 				else
