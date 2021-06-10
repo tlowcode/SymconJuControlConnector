@@ -1,6 +1,8 @@
 <?php
 
 declare(strict_types=1);
+require_once('Webclient.php');
+
 	class JuControlDevice extends IPSModule
 	{
 		public function Create()
@@ -9,7 +11,10 @@ declare(strict_types=1);
 			parent::Create();
 
 			$this->RequireParent('{4CB91589-CE01-4700-906F-26320EFCF6C4}');
-			$this->RegisterTimer("RefreshTimer", 5000, 'JCD_RefreshData('. $this->InstanceID . ');');	
+
+			$this->RegisterAttributeString("AccessToken", "noToken");
+
+			$this->RegisterTimer("RefreshTimer", 0, 'JCD_RefreshData('. $this->InstanceID . ');');	
 
 			$this->RegisterPropertyString("Username", "");
 			$this->RegisterPropertyString("Passwort", "");
@@ -62,7 +67,12 @@ declare(strict_types=1);
 
 		public function RefreshData()
 		{
+			$this->Login();
+
+			//TODO: only if instance state is active!
+
 			
+
 			$url = 'https://www.myjudo.eu';
 
 			$username = $this->ReadPropertyString("Username");
@@ -71,8 +81,50 @@ declare(strict_types=1);
 		
 			$loginUrl = $url . '/interface/?group=register&command=login&name=login&user=' . $username . '&password=' . md5($passwd, false) . '&nohash=' . $passwd . '&role=customer';
 		
-			$this->Send('GET', $loginUrl, '', 5000);
+			//$this->Send('GET', $loginUrl, '', 5000);
 
-			IPS_LogMessage($_IPS['SELF'], 'RefreshData() called! Username: '. $username . 'PW: ' . $passwd . 'URL: ' . $loginUrl);
+			//IPS_LogMessage($_IPS['SELF'], 'RefreshData() called! Username: '. $username . 'PW: ' . $passwd . 'URL: ' . $loginUrl);
+		}
+
+		public function Login(){
+
+			$wc = new WebClient();
+			$url = 'https://www.myjudo.eu';
+
+			$username = $this->ReadPropertyString("Username");
+			$passwd = $this->ReadPropertyString("Passwort");
+
+			$loginUrl = $url . '/interface/?group=register&command=login&name=login&user=' . $username . '&password=' . md5($passwd, false) . '&nohash=' . $passwd . '&role=customer';
+		
+			IPS_LogMessage($_IPS['SELF'], 'Trying to login with username: '. $username);
+
+			$response = $wc->Navigate($loginUrl);
+			if ($response === FALSE) 
+			{
+				$this->SetStatus(201);
+			}
+			else 
+			{
+				$json = json_decode($response);
+				if ($json->status == 'ok')
+				{
+					IPS_LogMessage($_IPS['SELF'], 'Login successful, Token: '. $json->token);
+					$this->WriteAttributeString("AccessToken", $json->token);
+					$this->SetStatus(102);
+					$this->SetTimerInterval("RefreshTimer", 60 * 1000);
+				}
+				else
+				{
+					IPS_LogMessage($_IPS['SELF'], 'Login failed!');
+					$this->SetStatus(201);
+					$this->SetTimerInterval("RefreshTimer", 0);
+				}
+			}
+		
+		}
+
+		public function TestConnection()
+		{
+			$this->Login();
 		}
 	}

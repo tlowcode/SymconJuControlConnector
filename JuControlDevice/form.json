@@ -21,7 +21,7 @@
         {
             "type": "Button",
             "caption": "Test Connection!",
-            "onClick": "JCD_RefreshData($id);"
+            "onClick": "JCD_TestConnection($id);"
         }
     ],
     "status":
