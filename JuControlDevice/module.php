@@ -122,7 +122,7 @@ require_once('Webclient.php');
 			
 			
 					/* SW Version */
-					$swMinor = intval(explode('.', $$json->data[0]->data[0]->sv, 2)[1], 10);
+					$swMinor = intval(explode('.', $json->data[0]->data[0]->sv, 2)[1], 10);
 					$swMajor = explode('.', $json->data[0]->data[0]->sv, 2)[0];
 			
 					if($swMinor < 10)
