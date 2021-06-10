@@ -137,7 +137,7 @@ require_once('Webclient.php');
 					SetValue($this->GetIDForIdent("swVersion"), $swMajor . '.' . $swMinor);
 			
 					/* Device ID */
-					$deviceIDhex = formatEndian($json->data[0]->data[0]->data->{3}->data, 'N');
+					$deviceIDhex = $this->formatEndian($json->data[0]->data[0]->data->{3}->data, 'N');
 					SetValue($this->GetIDForIdent("deviceID"), hexdec($deviceIDhex));
 
 				}
