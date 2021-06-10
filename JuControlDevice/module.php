@@ -19,27 +19,25 @@ require_once('Webclient.php');
 			$this->RegisterPropertyString("Username", "");
 			$this->RegisterPropertyString("Passwort", "");
 
-			$this->RegisterVariableString("DeviceID", "ID des Geräts", "");
-			$this->RegisterVariableString("DeviceType", "Typ des Geräts", "");
+			$this->RegisterVariableString("deviceID", "Geräte-ID", "", 0);
+			$this->RegisterVariableString("deviceType", "Geräte-Typ", "", 1);
+			$this->RegisterVariableString("deviceState", "Status", "", 2);
+			$this->RegisterVariableString("deviceSN", "Seriennummer", "", 3);
+			$this->RegisterVariableString("targetHardness", "Ziel-Wasserhärte", "", 4);
+			$this->RegisterVariableString("inputHardness", "Ist-Wasserhärte", "", 5);
+			$this->RegisterVariableString("rangeSaltPercent", "Füllstand Salz", "", 6);
+			$this->RegisterVariableString("currentFlow", "Aktueller Durchfluss", "", 7);
+			$this->RegisterVariableString("batteryState", "Batteriezustand Notstrommodul", "", 8);
+			$this->RegisterVariableString("activeScene", "Aktive Wasserszene", "", 9);
+			$this->RegisterVariableString("swVersion", "SW Version", "", 10);
+			$this->RegisterVariableString("hwVersion", "HW Version", "", 11);
+			$this->RegisterVariableString("ccuVersion", "CCU Version", "", 12);
+			$this->RegisterVariableString("nextService", "Nächste Wartung", "", 13);
+			$this->RegisterVariableString("hasEmergencySupply", "Notstrommodul verbaut", "", 14);
+			$this->RegisterVariableString("totalWater", "Gesamt-Durchfluss", "", 15);
+			$this->RegisterVariableString("totalRegenaration", "Gesamt-Regenerationen", "", 16);
+			$this->RegisterVariableString("totalService", "Gesamt-Wartungen", "", 17);
 
-		/*
-			public $deviceState = '';
-			public $deviceSN = '';  
-			public $targetHardness = 0;
-			public $inputHardness = 0;
-			public $rangeSaltPercent = 0;
-			public $currentFlow = 0;
-			public $batteryState = 0;
-			public $activeScene = '';
-			public $swVersion = '';
-			public $hwVersion = '';
-			public $ccuVersion = '';
-			public $nextService = '';
-			public $hasEmergencySupply = false;
-			public $totalWater = 0;
-			public $totalRegenaration = 0;
-			public $totalService = 0;
-			*/
 		}
 
 		public function Destroy()
@@ -54,32 +52,47 @@ require_once('Webclient.php');
 			parent::ApplyChanges();
 		}
 
-		public function Send(string $RequestMethod, string $RequestURL, string $RequestData, int $Timeout)
-		{
-			$this->SendDataToParent(json_encode(['DataID' => '{D4C1D08F-CD3B-494B-BE18-B36EF73B8F43}', "RequestMethod" => $RequestMethod, "RequestURL" => $RequestURL, "RequestData" => $RequestData, "Timeout" => $Timeout]));
-		}
-
-		public function ReceiveData($JSONString)
-		{
-			$data = json_decode($JSONString);
-			IPS_LogMessage('Device RECV', utf8_decode($data->Buffer . ' - ' . $data->RequestMethod . ' - ' . $data->RequestURL . ' - ' . $data->RequestData . ' - ' . $data->Timeout));
-		}
 
 		public function RefreshData()
 		{
-			$this->Login();
-
-			//TODO: only if instance state is active!
-
-			
 
 			$url = 'https://www.myjudo.eu';
+			$deviceDataUrl = $url . '/interface/?token=' . $accessToken . '&group=register&command=get%20device%20data';
+			$response = $wc->Navigate($deviceDataUrl);
+	
+			if ($response === FALSE) {
+				die('Failed get device Data');
+			}
+			else {
+				$json = json_decode($response);
+				if(isset( $json['status'] && $json->status == 'ok')
+				{
+					/* Parse response */
+					if ($json->data[0]->data[0]->dt == '0x33')
+					{
+						SetValue($this->GetIDForIdent("deviceType"), 'i-soft safe');
+					}
+					else
+					{
+						$this->SetStatus(202);
+						IPS_LogMessage($this->InstanceID, 'Wrong device type found! -> Aborting!');
+						$this->SetTimerInterval("RefreshTimer", 0);
+					}
+			
+					/* Device S/N */
+					SetValue($this->GetIDForIdent("deviceState"), $json->data[0]->serialnumber;);
+			
+					/* Device state */
+					SetValue($this->GetIDForIdent("deviceSN"), $json->data[0]->status;;);
 
-			$username = $this->ReadPropertyString("Username");
-			$passwd = $this->ReadPropertyString("Passwort");
-		
-		
-			$loginUrl = $url . '/interface/?group=register&command=login&name=login&user=' . $username . '&password=' . md5($passwd, false) . '&nohash=' . $passwd . '&role=customer';
+				}
+				else
+				{
+					/* Token not valid -> try to login again one time and wait for next RefreshData! */
+					$this->Login();
+				}
+				
+			}
 		
 			//$this->Send('GET', $loginUrl, '', 5000);
 
@@ -96,7 +109,7 @@ require_once('Webclient.php');
 
 			$loginUrl = $url . '/interface/?group=register&command=login&name=login&user=' . $username . '&password=' . md5($passwd, false) . '&nohash=' . $passwd . '&role=customer';
 		
-			IPS_LogMessage($_IPS['SELF'], 'Trying to login with username: '. $username);
+			IPS_LogMessage($this->InstanceID, 'Trying to login with username: '. $username);
 
 			$response = $wc->Navigate($loginUrl);
 			if ($response === FALSE) 
@@ -106,16 +119,16 @@ require_once('Webclient.php');
 			else 
 			{
 				$json = json_decode($response);
-				if ($json->status == 'ok')
+				if (isset( $json['status'] && $json->status == 'ok')
 				{
-					IPS_LogMessage($_IPS['SELF'], 'Login successful, Token: '. $json->token);
+					IPS_LogMessage($this->InstanceID, 'Login successful, Token: '. $json->token);
 					$this->WriteAttributeString("AccessToken", $json->token);
 					$this->SetStatus(102);
 					$this->SetTimerInterval("RefreshTimer", 60 * 1000);
 				}
 				else
 				{
-					IPS_LogMessage($_IPS['SELF'], 'Login failed!');
+					IPS_LogMessage($this->InstanceID, 'Login failed!');
 					$this->SetStatus(201);
 					$this->SetTimerInterval("RefreshTimer", 0);
 				}
