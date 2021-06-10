@@ -50,6 +50,22 @@ require_once('Webclient.php');
 			parent::ApplyChanges();
 		}
 
+		/* wird aufgerufen, wenn eine Variable geändert wird */
+		public function RequestAction($Ident, $Value) {
+ 
+			switch($Ident) {
+				case "TestVariable":
+					//Hier würde normalerweise eine Aktion z.B. das Schalten ausgeführt werden
+					//Ausgaben über 'echo' werden an die Visualisierung zurückgeleitet
+		 
+					//Neuen Wert in die Statusvariable schreiben
+					SetValue($this->GetIDForIdent($Ident), $Value);
+					break;
+				default:
+					throw new Exception("Invalid Ident");
+			}
+		 
+		}
 
 		public function RefreshData()
 		{
@@ -82,6 +98,47 @@ require_once('Webclient.php');
 			
 					/* Device state */
 					SetValue($this->GetIDForIdent("deviceSN"), $json->data[0]->status);
+
+					/* Connectivity module version */
+					SetValue($this->GetIDForIdent("ccuVersion"), $json->data[0]->sv);
+
+					/* Active scene */
+					SetValue($this->GetIDForIdent("activeScene"), $json->data[0]->waterscene);
+
+					/* HW Version */
+					$hwMinor = intval(explode('.', $json->data[0]->data[0]->hv, 2)[1], 10);
+					$hwMajor = explode('.', $json->data[0]->data[0]->hv, 2)[0];
+			  
+					if($hwMinor < 10)
+					{
+						$hwMinor = '0' . strval($hwMinor);
+					}
+					else
+					{
+						$hwMinor = strval($hwMinor);
+					}
+			  
+					SetValue($this->GetIDForIdent("hwVersion"), $hwMajor . '.' . $hwMinor);
+			
+			
+					/* SW Version */
+					$swMinor = intval(explode('.', $$json->data[0]->data[0]->sv, 2)[1], 10);
+					$swMajor = explode('.', $json->data[0]->data[0]->sv, 2)[0];
+			
+					if($swMinor < 10)
+					{
+						$swMinor = '0' . strval($swMinor);
+					}
+					else
+					{
+						$swMinor = strval($swMinor);
+					}
+			
+					SetValue($this->GetIDForIdent("swVersion"), $swMajor . '.' . $swMinor);
+			
+					/* Device ID */
+					$deviceIDhex = formatEndian($json->data[0]->data[0]->data->{3}->data, 'N');
+					SetValue($this->GetIDForIdent("deviceID"), hexdec($deviceIDhex));
 
 				}
 				else
@@ -137,5 +194,13 @@ require_once('Webclient.php');
 		public function TestConnection()
 		{
 			$this->Login();
+		}
+
+		function formatEndian($endian, $format = 'N') {
+			$endian = intval($endian, 16);      // convert string to hex
+			$endian = pack('L', $endian);       // pack hex to binary sting (unsinged long, machine byte order)
+			$endian = unpack($format, $endian); // convert binary sting to specified endian format
+		
+			return sprintf("%'.08x", $endian[1]); // return endian as a hex string (with padding zero)
 		}
 	}
