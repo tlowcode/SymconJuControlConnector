@@ -119,7 +119,7 @@ require_once('Webclient.php');
 			else 
 			{
 				$json = json_decode($response);
-				if (isset( $json['status'] && $json->status == 'ok')
+				if (isset( $json['status']) && $json->status == 'ok')
 				{
 					IPS_LogMessage($this->InstanceID, 'Login successful, Token: '. $json->token);
 					$this->WriteAttributeString("AccessToken", $json->token);
