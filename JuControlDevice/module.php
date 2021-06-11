@@ -150,12 +150,12 @@ require_once('Webclient.php');
 					SetValue($this->GetIDForIdent("totalWater"), hexdec($totalWaterHex));
 
 					/* Next service */
-					$hoursUntilNextService = hexdec($this->formatEndian(substr($json->data[0]->data[0]->data->{8}->data, 0, 4) . '0000', 'N'));
+					$hoursUntilNextService = hexdec($this->formatEndian(substr($json->data[0]->data[0]->data->{7}->data, 0, 4) . '0000', 'N'));
 
-					echo $json->data[0]->data[0]->data->{8}->data 
-						. ' / ' . substr($json->data[0]->data[0]->data->{8}->data, 0, 4) . '0000'
-						. ' / ' . $this->formatEndian(substr($json->data[0]->data[0]->data->{8}->data, 0, 4) . '0000', 'N') 
-						. ' / ' . $hoursUntilNextService;
+					//echo $json->data[0]->data[0]->data->{7}->data 
+					//	. ' / ' . substr($json->data[0]->data[0]->data->{7}->data, 0, 4) . '0000'
+					//	. ' / ' . $this->formatEndian(substr($json->data[0]->data[0]->data->{7}->data, 0, 4) . '0000', 'N') 
+					//	. ' / ' . $hoursUntilNextService;
 
 
 
