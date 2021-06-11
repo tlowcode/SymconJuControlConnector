@@ -30,11 +30,13 @@ require_once('Webclient.php');
 			$this->RegisterVariableString("swVersion", "SW Version", "", 10);
 			$this->RegisterVariableString("hwVersion", "HW Version", "", 11);
 			$this->RegisterVariableString("ccuVersion", "CCU Version", "", 12);
-			$this->RegisterVariableString("nextService", "Nächste Wartung", "", 13);
+			$this->RegisterVariableInteger("nextService", "Tage bis zur Wartung", "", 13);
 			$this->RegisterVariableString("hasEmergencySupply", "Notstrommodul verbaut", "", 14);
 			$this->RegisterVariableString("totalWater", "Gesamt-Durchfluss", "", 15);
 			$this->RegisterVariableString("totalRegenaration", "Gesamt-Regenerationen", "", 16);
 			$this->RegisterVariableString("totalService", "Gesamt-Wartungen", "", 17);
+
+			$this->SetStatus(104);
 
 		}
 
@@ -139,6 +141,15 @@ require_once('Webclient.php');
 					/* Device ID */
 					$deviceIDhex = $this->formatEndian($json->data[0]->data[0]->data->{3}->data, 'N');
 					SetValue($this->GetIDForIdent("deviceID"), hexdec($deviceIDhex));
+
+					/* Total water*/
+					$totalWaterHex = $this->formatEndian($json->data[0]->data[0]->data->{8}->data, 'N');
+					SetValue($this->GetIDForIdent("totalWater"), hexdec($totalWaterHex));
+
+					/* Next service */
+					$hoursUntilNextService = intval($this->formatEndian(substr($json->data[0]->data[0]->data->{8}->data, 0, 2), 'N'));
+					$daysUntilNextService = $hoursUntilNextService / 24;
+					SetValue($this->GetIDForIdent("nextService"), $daysUntilNextService);
 
 				}
 				else
