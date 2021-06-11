@@ -147,7 +147,7 @@ require_once('Webclient.php');
 					SetValue($this->GetIDForIdent("totalWater"), hexdec($totalWaterHex));
 
 					/* Next service */
-					$hoursUntilNextService = intval($this->formatEndian(substr($json->data[0]->data[0]->data->{8}->data, 0, 2), 'N'));
+					$hoursUntilNextService = hexdec($this->formatEndian(substr($json->data[0]->data[0]->data->{8}->data, 0, 2), 'N'));
 					$daysUntilNextService = $hoursUntilNextService / 24;
 					SetValue($this->GetIDForIdent("nextService"), $daysUntilNextService);
 
