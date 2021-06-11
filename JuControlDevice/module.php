@@ -152,10 +152,11 @@ require_once('Webclient.php');
 					/* Next service */
 					$hoursUntilNextService = hexdec($this->formatEndian(substr($json->data[0]->data[0]->data->{8}->data, 0, 2), 'N'));
 
-					echo $json->data[0]->data[0]->data->{8}->data;
-					echo substr($json->data[0]->data[0]->data->{8}->data, 0, 2);
-					echo $this->formatEndian(substr($json->data[0]->data[0]->data->{8}->data, 0, 2), 'N');
-					echo $hoursUntilNextService;
+					echo $json->data[0]->data[0]->data->{8}->data 
+						. ' / ' . substr($json->data[0]->data[0]->data->{8}->data, 0, 2) 
+						. ' / ' . $this->formatEndian(substr($json->data[0]->data[0]->data->{8}->data, 0, 2), 'N') 
+						. ' / ' . $hoursUntilNextService;
+
 
 
 					$daysUntilNextService = $hoursUntilNextService / 24;
