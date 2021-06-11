@@ -32,6 +32,7 @@
     "status":
     [
         { "code": 102, "icon": "active", "caption": "Login information valid!" },
+        { "code": 104, "icon": "inactive", "caption": "Instance is inactive!" },
         { "code": 201, "icon": "error", "caption": "Authentication failed!" },
         { "code": 202, "icon": "error", "caption": "Wrong device type found!" }
     ]

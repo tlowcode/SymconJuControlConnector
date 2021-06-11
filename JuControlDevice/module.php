@@ -77,19 +77,22 @@ require_once('Webclient.php');
 			$response = $wc->Navigate($deviceDataUrl);
 	
 			if ($response === FALSE) {
-				die('Failed get device Data');
+				$this->SetStatus(104);
+				$this->SetTimerInterval("RefreshTimer", 0);
 			}
 			else {
 				$json = json_decode($response);
 				if(isset($json->status) && $json->status == 'ok')
 				{
 					/* Parse response */
+					$this->SetStatus(102);
 					if ($json->data[0]->data[0]->dt == '0x33')
 					{
 						SetValue($this->GetIDForIdent("deviceType"), 'i-soft safe');
 					}
 					else
 					{
+						$this->SetStatus(104);
 						$this->SetStatus(202);
 						IPS_LogMessage($this->InstanceID, 'Wrong device type found! -> Aborting!');
 						$this->SetTimerInterval("RefreshTimer", 0);
@@ -148,6 +151,13 @@ require_once('Webclient.php');
 
 					/* Next service */
 					$hoursUntilNextService = hexdec($this->formatEndian(substr($json->data[0]->data[0]->data->{8}->data, 0, 2), 'N'));
+
+					echo $json->data[0]->data[0]->data->{8}->data;
+					echo substr($json->data[0]->data[0]->data->{8}->data, 0, 2);
+					echo $this->formatEndian(substr($json->data[0]->data[0]->data->{8}->data, 0, 2), 'N');
+					echo $hoursUntilNextService;
+
+
 					$daysUntilNextService = $hoursUntilNextService / 24;
 					SetValue($this->GetIDForIdent("nextService"), $daysUntilNextService);
 
