@@ -150,11 +150,11 @@ require_once('Webclient.php');
 					SetValue($this->GetIDForIdent("totalWater"), hexdec($totalWaterHex));
 
 					/* Next service */
-					$hoursUntilNextService = hexdec($this->formatEndian(substr($json->data[0]->data[0]->data->{8}->data, 0, 4), 'N', "%'.04x"));
+					$hoursUntilNextService = hexdec($this->formatEndian(substr($json->data[0]->data[0]->data->{8}->data, 0, 4) . '0000', 'N'));
 
 					echo $json->data[0]->data[0]->data->{8}->data 
-						. ' / ' . substr($json->data[0]->data[0]->data->{8}->data, 0, 4) 
-						. ' / ' . $this->formatEndian(substr($json->data[0]->data[0]->data->{8}->data, 0, 4), 'N', "%'.04x") 
+						. ' / ' . substr($json->data[0]->data[0]->data->{8}->data, 0, 4) . '0000'
+						. ' / ' . $this->formatEndian(substr($json->data[0]->data[0]->data->{8}->data, 0, 4) . '0000', 'N') 
 						. ' / ' . $hoursUntilNextService;
 
 
@@ -218,11 +218,11 @@ require_once('Webclient.php');
 			$this->Login();
 		}
 
-		function formatEndian($endian, $format = 'N', $formatStr = "%'.08x") {
+		function formatEndian($endian, $format = 'N') {
 			$endian = intval($endian, 16);      // convert string to hex
 			$endian = pack('L', $endian);       // pack hex to binary sting (unsinged long, machine byte order)
 			$endian = unpack($format, $endian); // convert binary sting to specified endian format
 		
-			return sprintf($formatStr, $endian[1]); // return endian as a hex string (with padding zero)
+			return sprintf("%'.08x", $endian[1]); // return endian as a hex string (with padding zero)
 		}
 	}
