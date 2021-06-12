@@ -34,7 +34,7 @@ require_once('Webclient.php');
 			if (IPS_VariableProfileExists("JCD.Days") == false)
 			{
 				IPS_CreateVariableProfile("JCD.Days", 1);
-				IPS_SetVariableProfileText("JCD.Days", „“, " Tage");
+				IPS_SetVariableProfileText("JCD.Days", "", " Tage");
 			}
 
 			$this->RegisterVariableInteger("nextService", "Tage bis zur Wartung", "JCD.Days", 13);
@@ -44,7 +44,7 @@ require_once('Webclient.php');
 			if (IPS_VariableProfileExists("JCD.Liter") == false)
 			{
 				IPS_CreateVariableProfile("JCD.Liter", 1);
-				IPS_SetVariableProfileText("JCD.Liter", „“, " Liter");
+				IPS_SetVariableProfileText("JCD.Liter", "", " Liter");
 			}
 
 			$this->RegisterVariableInteger("totalWater", "Gesamt-Durchfluss", "JCD.Liter", 15);
