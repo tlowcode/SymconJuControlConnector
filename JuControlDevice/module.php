@@ -31,13 +31,13 @@ require_once('Webclient.php');
 			$this->RegisterVariableString("hwVersion", "HW Version", "", 11);
 			$this->RegisterVariableString("ccuVersion", "CCU Version", "", 12);
 
-			$this->RegisterProfileInteger("JCD.Days", "Wave", "", " Tage", 0, 1000, 1);
+			$this->RegisterProfileInteger("JCD.Days", "Clock", "", " Tage", 0, 10000, 1);
 
 			$this->RegisterVariableInteger("nextService", "Tage bis zur Wartung", "JCD.Days", 13);
 			$this->RegisterVariableString("hasEmergencySupply", "Notstrommodul verbaut", "", 14);
 
-
-			$this->RegisterVariableInteger("totalWater", "Gesamt-Durchfluss", "", 15);
+			$this->RegisterProfileInteger("JCD.Liter", "Wave", "", " Liter", 0, 99999999, 1);
+			$this->RegisterVariableInteger("totalWater", "Gesamt-Durchfluss", "JCD.Liter", 15);
 
 			$this->RegisterVariableString("totalRegenaration", "Gesamt-Regenerationen", "", 16);
 			$this->RegisterVariableString("totalService", "Gesamt-Wartungen", "", 17);
@@ -105,10 +105,10 @@ require_once('Webclient.php');
 					}
 			
 					/* Device S/N */
-					SetValue($this->GetIDForIdent("deviceState"), $json->data[0]->serialnumber);
+					SetValue($this->GetIDForIdent("deviceSN"), $json->data[0]->serialnumber);
 			
 					/* Device state */
-					SetValue($this->GetIDForIdent("deviceSN"), $json->data[0]->status);
+					SetValue($this->GetIDForIdent("deviceState"), $json->data[0]->status);
 
 					/* Connectivity module version */
 					SetValue($this->GetIDForIdent("ccuVersion"), $json->data[0]->sv);
@@ -157,16 +157,16 @@ require_once('Webclient.php');
 
 					/* Next service */
 					$hoursUntilNextService = hexdec($this->formatEndian(substr($json->data[0]->data[0]->data->{7}->data, 0, 4) . '0000', 'N'));
-
-					//echo $json->data[0]->data[0]->data->{7}->data 
-					//	. ' / ' . substr($json->data[0]->data[0]->data->{7}->data, 0, 4) . '0000'
-					//	. ' / ' . $this->formatEndian(substr($json->data[0]->data[0]->data->{7}->data, 0, 4) . '0000', 'N') 
-					//	. ' / ' . $hoursUntilNextService;
-
-
-
 					$daysUntilNextService = $hoursUntilNextService / 24;
 					SetValue($this->GetIDForIdent("nextService"), $daysUntilNextService);
+
+					/* Count regenaration */
+					$countRegeneration = hexdec($this->formatEndian(substr($json->data[0]->data[0]->data->{791}->data, 60, 4) . '0000', 'N'));
+					SetValue($this->GetIDForIdent("totalRegenaration"), $countRegeneration);
+
+					/* Count service */
+					$countService = hexdec($this->formatEndian(substr($json->data[0]->data[0]->data->{7}->data, 8, 4) . '0000', 'N'));
+					SetValue($this->GetIDForIdent("totalService"), $countService);
 
 				}
 				else
