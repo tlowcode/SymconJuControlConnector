@@ -31,23 +31,13 @@ require_once('Webclient.php');
 			$this->RegisterVariableString("hwVersion", "HW Version", "", 11);
 			$this->RegisterVariableString("ccuVersion", "CCU Version", "", 12);
 
-			if (IPS_VariableProfileExists("JCD.Days") == false)
-			{
-				IPS_CreateVariableProfile("JCD.Days", 1);
-				IPS_SetVariableProfileText("JCD.Days", "", " Tage");
-			}
+			RegisterProfileInteger("JCD.Days", "Wave", "", " Tage", 0, 1000, 1);
 
 			$this->RegisterVariableInteger("nextService", "Tage bis zur Wartung", "JCD.Days", 13);
 			$this->RegisterVariableString("hasEmergencySupply", "Notstrommodul verbaut", "", 14);
 
 
-			if (IPS_VariableProfileExists("JCD.Liter") == false)
-			{
-				IPS_CreateVariableProfile("JCD.Liter", 1);
-				IPS_SetVariableProfileText("JCD.Liter", "", " Liter");
-			}
-
-			$this->RegisterVariableInteger("totalWater", "Gesamt-Durchfluss", "JCD.Liter", 15);
+			$this->RegisterVariableInteger("totalWater", "Gesamt-Durchfluss", "", 15);
 
 			$this->RegisterVariableString("totalRegenaration", "Gesamt-Regenerationen", "", 16);
 			$this->RegisterVariableString("totalService", "Gesamt-Wartungen", "", 17);
@@ -240,5 +230,22 @@ require_once('Webclient.php');
 			$endian = unpack($format, $endian); // convert binary sting to specified endian format
 		
 			return sprintf("%'.08x", $endian[1]); // return endian as a hex string (with padding zero)
+		}
+
+		private function RegisterProfileInteger($Name, $Icon, $Prefix, $Suffix, $MinValue, $MaxValue, $StepSize)
+		{
+				if (!IPS_VariableProfileExists($Name))
+				{
+					IPS_CreateVariableProfile($Name, 1);
+				}
+				else
+				{
+					$profile = IPS_GetVariableProfile($Name);
+					if ($profile['ProfileType'] != 1)
+						throw new Exception("Variable profile type does not match for profile " . $Name);
+				}
+				IPS_SetVariableProfileIcon($Name, $Icon);
+				IPS_SetVariableProfileText($Name, $Prefix, $Suffix);
+				IPS_SetVariableProfileValues($Name, $MinValue, $MaxValue, $StepSize);        
 		}
 	}
