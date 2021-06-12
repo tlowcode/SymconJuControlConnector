@@ -33,7 +33,7 @@ require_once('Webclient.php');
 
 			if (IPS_VariableProfileExists("JCD.Days") == false)
 			{
-				IPS_CreateVariableProfile("JCD.Days", 3);
+				IPS_CreateVariableProfile("JCD.Days", 1);
 				IPS_SetVariableProfileText("JCD.Days", „“, " Tage");
 			}
 
