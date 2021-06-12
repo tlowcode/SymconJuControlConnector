@@ -30,9 +30,25 @@ require_once('Webclient.php');
 			$this->RegisterVariableString("swVersion", "SW Version", "", 10);
 			$this->RegisterVariableString("hwVersion", "HW Version", "", 11);
 			$this->RegisterVariableString("ccuVersion", "CCU Version", "", 12);
-			$this->RegisterVariableInteger("nextService", "Tage bis zur Wartung", "", 13);
+
+			if (IPS_VariableProfileExists("JCD.Days") == false)
+			{
+				IPS_CreateVariableProfile("JCD.Days", 3);
+				IPS_SetVariableProfileText("JCD.Days", „“, " Tage");
+			}
+
+			$this->RegisterVariableInteger("nextService", "Tage bis zur Wartung", "JCD.Days", 13);
 			$this->RegisterVariableString("hasEmergencySupply", "Notstrommodul verbaut", "", 14);
-			$this->RegisterVariableString("totalWater", "Gesamt-Durchfluss", "", 15);
+
+
+			if (IPS_VariableProfileExists("JCD.Liter") == false)
+			{
+				IPS_CreateVariableProfile("JCD.Liter", 1);
+				IPS_SetVariableProfileText("JCD.Liter", „“, " Liter");
+			}
+
+			$this->RegisterVariableInteger("totalWater", "Gesamt-Durchfluss", "JCD.Liter", 15);
+
 			$this->RegisterVariableString("totalRegenaration", "Gesamt-Regenerationen", "", 16);
 			$this->RegisterVariableString("totalService", "Gesamt-Wartungen", "", 17);
 
