@@ -31,7 +31,7 @@ require_once('Webclient.php');
 			$this->RegisterVariableString("hwVersion", "HW Version", "", 11);
 			$this->RegisterVariableString("ccuVersion", "CCU Version", "", 12);
 
-			RegisterProfileInteger("JCD.Days", "Wave", "", " Tage", 0, 1000, 1);
+			$this->RegisterProfileInteger("JCD.Days", "Wave", "", " Tage", 0, 1000, 1);
 
 			$this->RegisterVariableInteger("nextService", "Tage bis zur Wartung", "JCD.Days", 13);
 			$this->RegisterVariableString("hasEmergencySupply", "Notstrommodul verbaut", "", 14);
