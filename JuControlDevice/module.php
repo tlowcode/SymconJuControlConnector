@@ -161,7 +161,8 @@ require_once('Webclient.php');
 					SetValue($this->GetIDForIdent("nextService"), $daysUntilNextService);
 
 					/* Count regenaration */
-					$countRegeneration = hexdec($this->formatEndian(substr($json->data[0]->data[0]->data->{791}->data, 60, 4) . '0000', 'N'));
+					$countRegeneration = hexdec($this->formatEndian(substr(explode(':',$json->data[0]->data[0]->data->{791}->data)[1], 60, 4) . '0000', 'N'));
+					echo substr(explode(':',$json->data[0]->data[0]->data->{791}->data)[1], 60, 4) . '0000';
 					SetValue($this->GetIDForIdent("totalRegenaration"), $countRegeneration);
 
 					/* Count service */
