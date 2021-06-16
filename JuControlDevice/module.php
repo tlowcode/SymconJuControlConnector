@@ -21,12 +21,28 @@ require_once('Webclient.php');
 			$this->RegisterVariableString("deviceType", "Geräte-Typ", "", 1);
 			$this->RegisterVariableString("deviceState", "Status", "", 2);
 			$this->RegisterVariableString("deviceSN", "Seriennummer", "", 3);
-			$this->RegisterVariableString("targetHardness", "Ziel-Wasserhärte", "", 4);
-			$this->RegisterVariableString("inputHardness", "Ist-Wasserhärte", "", 5);
-			$this->RegisterVariableString("rangeSaltPercent", "Füllstand Salz", "", 6);
-			$this->RegisterVariableString("currentFlow", "Aktueller Durchfluss", "", 7);
-			$this->RegisterVariableString("batteryState", "Batteriezustand Notstrommodul", "", 8);
+
+
+			$this->RegisterProfileInteger("JCD.dH_int", "Drops", "", " °dH", 0, 50, 1);
+			$this->RegisterProfileFloat("JCD.dH_float", "Drops", "", " °dH", 0, 50, 0.1);
+
+			$this->RegisterVariableInteger("targetHardness", "Ziel-Wasserhärte", "JCD.dH_int", 4);
+			$this->RegisterVariableFloat("inputHardness", "Ist-Wasserhärte", "JCD.dH_float", 5);
+
+
+			$this->RegisterProfileInteger("JCD.Percent", "Intensity", "", " %", 0, 100, 1);
+			$this->RegisterVariableInteger("rangeSaltPercent", "Füllstand Salz", "JCD.Percent", 6);
+
+			$this->RegisterProfileInteger("JCD.lph", "Drops", "", " l/h", 0, 1000000, 1);
+			$this->RegisterVariableInteger("currentFlow", "Aktueller Durchfluss", "JCD.lph", 7);
+
+
+			$this->RegisterVariableInteger("batteryState", "Batteriezustand Notstrommodul", "JCD.Percent", 8);
+
+
 			$this->RegisterVariableString("activeScene", "Aktive Wasserszene", "", 9);
+
+
 			$this->RegisterVariableString("swVersion", "SW Version", "", 10);
 			$this->RegisterVariableString("hwVersion", "HW Version", "", 11);
 			$this->RegisterVariableString("ccuVersion", "CCU Version", "", 12);
@@ -169,6 +185,13 @@ require_once('Webclient.php');
 					$countService = hexdec($this->formatEndian(substr($json->data[0]->data[0]->data->{7}->data, 8, 4) . '0000', 'N'));
 					SetValue($this->GetIDForIdent("totalService"), $countService);
 
+					/* Range Salt */
+					$lowRangeSaltPercent = substr($json->data[0]->data[0]->data->{94}->data, 4, 2);
+					$highRangeSaltPercent = substr($json->data[0]->data[0]->data->{94}->data, 4, 2);
+					$rangeSaltPercent = hexdec($highRangeSaltPercent + $lowRangeSaltPercent);
+
+					SetValue($this->GetIDForIdent("rangeSaltPercent"), $rangeSaltPercent);
+
 				}
 				else
 				{
@@ -243,6 +266,23 @@ require_once('Webclient.php');
 				{
 					$profile = IPS_GetVariableProfile($Name);
 					if ($profile['ProfileType'] != 1)
+						throw new Exception("Variable profile type does not match for profile " . $Name);
+				}
+				IPS_SetVariableProfileIcon($Name, $Icon);
+				IPS_SetVariableProfileText($Name, $Prefix, $Suffix);
+				IPS_SetVariableProfileValues($Name, $MinValue, $MaxValue, $StepSize);        
+		}
+
+		private function RegisterProfileFloat($Name, $Icon, $Prefix, $Suffix, $MinValue, $MaxValue, $StepSize)
+		{
+				if (!IPS_VariableProfileExists($Name))
+				{
+					IPS_CreateVariableProfile($Name, 2);
+				}
+				else
+				{
+					$profile = IPS_GetVariableProfile($Name);
+					if ($profile['ProfileType'] != 2)
 						throw new Exception("Variable profile type does not match for profile " . $Name);
 				}
 				IPS_SetVariableProfileIcon($Name, $Icon);
