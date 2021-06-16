@@ -217,28 +217,25 @@ require_once('Webclient.php');
 					
 
 					/* check waterscene and update target hardness */
-					if(GetValue($this->GetIDForIdent("activeScene") != 'normal'))
-					{
-
-						switch (GetValue($this->GetIDForIdent("activeScene"))) {
-							case 'washing':
-								SetValue($this->GetIDForIdent("targetHardness"), $this->ReadAttributeInteger("Hardness_Washing"));
-								break;
-							case 'shower':
-								SetValue($this->GetIDForIdent("targetHardness"), $this->ReadAttributeInteger("Hardness_Shower"));
-								break;
-							case 'watering':
-								SetValue($this->GetIDForIdent("targetHardness"), $this->ReadAttributeInteger("Hardness_Watering"));
-								break;
-							case 'heater':
-								SetValue($this->GetIDForIdent("targetHardness"), $this->ReadAttributeInteger("Hardness_Heater"));
-								break;
-							
-							default:
-								/* do not update */
-								break;
-						}
+					switch (GetValue($this->GetIDForIdent("activeScene"))) {
+						case 'washing':
+							SetValue($this->GetIDForIdent("targetHardness"), $this->ReadAttributeInteger("Hardness_Washing"));
+							break;
+						case 'shower':
+							SetValue($this->GetIDForIdent("targetHardness"), $this->ReadAttributeInteger("Hardness_Shower"));
+							break;
+						case 'watering':
+							SetValue($this->GetIDForIdent("targetHardness"), $this->ReadAttributeInteger("Hardness_Watering"));
+							break;
+						case 'heater':
+							SetValue($this->GetIDForIdent("targetHardness"), $this->ReadAttributeInteger("Hardness_Heater"));
+							break;
+						case 'normal':							
+						default:
+							/* do not update */
+							break;
 					}
+
 
 				}
 				else
