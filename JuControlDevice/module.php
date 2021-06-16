@@ -194,7 +194,7 @@ require_once('Webclient.php');
 					$inputHardness = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 52, 2));
 					$targetHardness = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 16, 2));
 					SetValue($this->GetIDForIdent("inputHardness"), $inputHardness);
-					SetValue($this->GetIDForIdent("targetHardness"), $inputHardness);
+					SetValue($this->GetIDForIdent("targetHardness"), $targetHardness);
 
 
 					/* currentFlow */
