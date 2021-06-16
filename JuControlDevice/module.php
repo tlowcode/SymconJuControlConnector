@@ -17,10 +17,7 @@ require_once('Webclient.php');
 			$this->RegisterPropertyString("Username", "");
 			$this->RegisterPropertyString("Passwort", "");
 
-			$this->RegisterAttributeInteger("Hardness_Washing", 0);
-			$this->RegisterAttributeInteger("Hardness_Heater", 0);
-			$this->RegisterAttributeInteger("Hardness_Watering", 0);
-			$this->RegisterAttributeInteger("Hardness_Shower", 0);
+
 
 			$this->RegisterVariableString("deviceID", "Geräte-ID", "", 0);
 			$this->RegisterVariableString("deviceType", "Geräte-Typ", "", 1);
@@ -62,6 +59,11 @@ require_once('Webclient.php');
 
 			$this->RegisterVariableString("totalRegenaration", "Gesamt-Regenerationen", "", 16);
 			$this->RegisterVariableString("totalService", "Gesamt-Wartungen", "", 17);
+
+			$this->RegisterVariableInteger("Hardness_Washing", "Szenen-Wasserhärte Waschen", "JCD.dH_int", 18);
+			$this->RegisterVariableInteger("Hardness_Heater", "Szenen-Wasserhärte Heizung", "JCD.dH_int", 19);
+			$this->RegisterVariableInteger("Hardness_Watering", "Szenen-Wasserhärte Bewässerung", "JCD.dH_int", 20);
+			$this->RegisterVariableInteger("Hardness_Shower", "Szenen-Wasserhärte Duschen", "JCD.dH_int", 21);
 
 			$this->SetStatus(104);
 
@@ -209,26 +211,26 @@ require_once('Webclient.php');
 					SetValue($this->GetIDForIdent("currentFlow"), $currentFlow);
 
 					/* read target hardness of waterscenes */
-					$this->WriteAttributeInteger("Hardness_Washing", intval($json->data[0]->hardness_shower));
-					$this->WriteAttributeInteger("Hardness_Shower", intval($json->data[0]->hardness_shower));
-					$this->WriteAttributeInteger("Hardness_Watering", intval($json->data[0]->hardness_shower));
-					$this->WriteAttributeInteger("Hardness_Heater", intval($json->data[0]->hardness_shower));
+					SetValue($this->GetIDForIdent("Hardness_Washing"), intval($json->data[0]->hardness_washing));
+					SetValue($this->GetIDForIdent("Hardness_Shower"), intval($json->data[0]->hardness_shower));
+					SetValue($this->GetIDForIdent("Hardness_Watering"), intval($json->data[0]->hardness_watering));
+					SetValue($this->GetIDForIdent("Hardness_Heater"), intval($json->data[0]->hardness_heater));
 
 					
 
 					/* check waterscene and update target hardness */
 					switch (GetValue($this->GetIDForIdent("activeScene"))) {
 						case 'washing':
-							SetValue($this->GetIDForIdent("targetHardness"), $this->ReadAttributeInteger("Hardness_Washing"));
+							SetValue($this->GetIDForIdent("targetHardness"), $this->GetIDForIdent("Hardness_Washing"));
 							break;
 						case 'shower':
-							SetValue($this->GetIDForIdent("targetHardness"), $this->ReadAttributeInteger("Hardness_Shower"));
+							SetValue($this->GetIDForIdent("targetHardness"), $this->GetIDForIdent("Hardness_Shower"));
 							break;
 						case 'watering':
-							SetValue($this->GetIDForIdent("targetHardness"), $this->ReadAttributeInteger("Hardness_Watering"));
+							SetValue($this->GetIDForIdent("targetHardness"), $this->GetIDForIdent("Hardness_Watering"));
 							break;
 						case 'heater':
-							SetValue($this->GetIDForIdent("targetHardness"), $this->ReadAttributeInteger("Hardness_Heater"));
+							SetValue($this->GetIDForIdent("targetHardness"), $this->GetIDForIdent("Hardness_Heater"));
 							break;
 						case 'normal':							
 						default:
