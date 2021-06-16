@@ -187,11 +187,19 @@ require_once('Webclient.php');
 					/* Range Salt */
 					$lowRangeSaltPercent = substr($json->data[0]->data[0]->data->{94}->data, 0, 2);
 					$highRangeSaltPercent = substr($json->data[0]->data[0]->data->{94}->data, 2, 2);
-					$rangeSaltPercent = 2 * (hexdec($highRangeSaltPercent . $lowRangeSaltPercent) / 1000);
-
-					echo 'Raw: ' . $json->data[0]->data[0]->data->{94}->data . ' Sliced:  ' . $lowRangeSaltPercent . $highRangeSaltPercent . ' Result: ' . $rangeSaltPercent;
-
+					$rangeSaltPercent = 2 * (hexdec($highRangeSaltPercent . $lowRangeSaltPercent) / 1000);		
 					SetValue($this->GetIDForIdent("rangeSaltPercent"), $rangeSaltPercent);
+
+					/* Input hardness */
+					$inputHardness = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 52, 2));
+					SetValue($this->GetIDForIdent("inputHardness"), $inputHardness);
+
+
+					/* currentFlow */
+					$lowCurrentFlow = substr(explode($json->data[0]->data[0]->data->{790}->data)[1], 32, 2);
+					$highCurrentFlow = substr(explode($json->data[0]->data[0]->data->{790}->data)[1], 34, 2);
+					$currentFlow = hexdec($highCurrentFlow . $lowCurrentFlow);
+					SetValue($this->GetIDForIdent("currentFlow"), $currentFlow);
 
 				}
 				else
