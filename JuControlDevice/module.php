@@ -196,8 +196,8 @@ require_once('Webclient.php');
 
 
 					/* currentFlow */
-					$lowCurrentFlow = substr(explode($json->data[0]->data[0]->data->{790}->data)[1], 32, 2);
-					$highCurrentFlow = substr(explode($json->data[0]->data[0]->data->{790}->data)[1], 34, 2);
+					$lowCurrentFlow = substr(explode(':', $json->data[0]->data[0]->data->{790}->data)[1], 32, 2);
+					$highCurrentFlow = substr(explode(':', $json->data[0]->data[0]->data->{790}->data)[1], 34, 2);
 					$currentFlow = hexdec($highCurrentFlow . $lowCurrentFlow);
 					SetValue($this->GetIDForIdent("currentFlow"), $currentFlow);
 
