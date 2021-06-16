@@ -189,6 +189,8 @@ require_once('Webclient.php');
 					$highRangeSaltPercent = substr($json->data[0]->data[0]->data->{94}->data, 2, 2);
 					$rangeSaltPercent = 2 * (hexdec($highRangeSaltPercent + $lowRangeSaltPercent) / 1000);
 
+					echo 'Raw: ' . $json->data[0]->data[0]->data->{94}->data . ' Sliced:  ' . $lowRangeSaltPercent . $highRangeSaltPercent . ' Result: ' . $rangeSaltPercent;
+
 					SetValue($this->GetIDForIdent("rangeSaltPercent"), $rangeSaltPercent);
 
 				}
