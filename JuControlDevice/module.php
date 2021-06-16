@@ -190,9 +190,11 @@ require_once('Webclient.php');
 					$rangeSaltPercent = 2 * (hexdec($highRangeSaltPercent . $lowRangeSaltPercent) / 1000);		
 					SetValue($this->GetIDForIdent("rangeSaltPercent"), $rangeSaltPercent);
 
-					/* Input hardness */
+					/* Input /target hardness */
 					$inputHardness = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 52, 2));
+					$targetHardness = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 16, 2));
 					SetValue($this->GetIDForIdent("inputHardness"), $inputHardness);
+					SetValue($this->GetIDForIdent("targetHardness"), $inputHardness);
 
 
 					/* currentFlow */
