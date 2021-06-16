@@ -178,7 +178,6 @@ require_once('Webclient.php');
 
 					/* Count regenaration */
 					$countRegeneration = hexdec($this->formatEndian(substr(explode(':',$json->data[0]->data[0]->data->{791}->data)[1], 60, 4) . '0000', 'N'));
-					echo substr(explode(':',$json->data[0]->data[0]->data->{791}->data)[1], 60, 4) . '0000';
 					SetValue($this->GetIDForIdent("totalRegenaration"), $countRegeneration);
 
 					/* Count service */
@@ -186,9 +185,9 @@ require_once('Webclient.php');
 					SetValue($this->GetIDForIdent("totalService"), $countService);
 
 					/* Range Salt */
-					$lowRangeSaltPercent = substr($json->data[0]->data[0]->data->{94}->data, 4, 2);
-					$highRangeSaltPercent = substr($json->data[0]->data[0]->data->{94}->data, 4, 2);
-					$rangeSaltPercent = hexdec($highRangeSaltPercent + $lowRangeSaltPercent);
+					$lowRangeSaltPercent = substr($json->data[0]->data[0]->data->{94}->data, 0, 2);
+					$highRangeSaltPercent = substr($json->data[0]->data[0]->data->{94}->data, 2, 2);
+					$rangeSaltPercent = 2 * hexdec($highRangeSaltPercent + $lowRangeSaltPercent);
 
 					SetValue($this->GetIDForIdent("rangeSaltPercent"), $rangeSaltPercent);
 
