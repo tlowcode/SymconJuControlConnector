@@ -187,7 +187,7 @@ require_once('Webclient.php');
 					/* Range Salt */
 					$lowRangeSaltPercent = substr($json->data[0]->data[0]->data->{94}->data, 0, 2);
 					$highRangeSaltPercent = substr($json->data[0]->data[0]->data->{94}->data, 2, 2);
-					$rangeSaltPercent = 2 * hexdec($highRangeSaltPercent + $lowRangeSaltPercent);
+					$rangeSaltPercent = 2 * (hexdec($highRangeSaltPercent + $lowRangeSaltPercent) / 1000);
 
 					SetValue($this->GetIDForIdent("rangeSaltPercent"), $rangeSaltPercent);
 
