@@ -17,6 +17,11 @@ require_once('Webclient.php');
 			$this->RegisterPropertyString("Username", "");
 			$this->RegisterPropertyString("Passwort", "");
 
+			$this->RegisterAttributeInteger("Hardness_Washing", 0);
+			$this->RegisterAttributeInteger("Hardness_Heater", 0);
+			$this->RegisterAttributeInteger("Hardness_Watering", 0);
+			$this->RegisterAttributeInteger("Hardness_Shower", 0);
+
 			$this->RegisterVariableString("deviceID", "Geräte-ID", "", 0);
 			$this->RegisterVariableString("deviceType", "Geräte-Typ", "", 1);
 			$this->RegisterVariableString("deviceState", "Status", "", 2);
@@ -202,6 +207,38 @@ require_once('Webclient.php');
 					$highCurrentFlow = substr(explode(':', $json->data[0]->data[0]->data->{790}->data)[1], 34, 2);
 					$currentFlow = hexdec($highCurrentFlow . $lowCurrentFlow);
 					SetValue($this->GetIDForIdent("currentFlow"), $currentFlow);
+
+					/* read target hardness of waterscenes */
+					$this->WriteAttributeInteger("Hardness_Washing", intval($json->data[0]->hardness_shower));
+					$this->WriteAttributeInteger("Hardness_Shower", intval($json->data[0]->hardness_shower));
+					$this->WriteAttributeInteger("Hardness_Watering", intval($json->data[0]->hardness_shower));
+					$this->WriteAttributeInteger("Hardness_Heater", intval($json->data[0]->hardness_shower));
+
+					
+
+					/* check waterscene and update target hardness */
+					if(GetValue($this->GetIDForIdent("activeScene") != 'normal'))
+					{
+
+						switch (GetValue($this->GetIDForIdent("activeScene"))) {
+							case 'washing':
+								SetValue($this->GetIDForIdent("targetHardness"), $this->ReadAttributeInteger("Hardness_Washing"));
+								break;
+							case 'shower':
+								SetValue($this->GetIDForIdent("targetHardness"), $this->ReadAttributeInteger("Hardness_Shower"));
+								break;
+							case 'watering':
+								SetValue($this->GetIDForIdent("targetHardness"), $this->ReadAttributeInteger("Hardness_Watering"));
+								break;
+							case 'heater':
+								SetValue($this->GetIDForIdent("targetHardness"), $this->ReadAttributeInteger("Hardness_Heater"));
+								break;
+							
+							default:
+								/* do not update */
+								break;
+						}
+					}
 
 				}
 				else
