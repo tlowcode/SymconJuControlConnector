@@ -131,7 +131,7 @@ require_once('Webclient.php');
 					SetValue($this->GetIDForIdent($Ident), $Value);
 				}
 				else{
-					echo "There was an error updating the value!"
+					echo "There was an error updating the value!";
 				}
 			}
 
