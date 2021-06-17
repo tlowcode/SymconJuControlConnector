@@ -125,24 +125,29 @@ require_once('Webclient.php');
 					switch ($Value) {
 						case 0:
 							$action = "normal";
+							$command = "write%20data&dt=0x33&index=201&data=2&da=0x1&disable_time=" ."&action=" . $action;
 							break;
 						case 1:
 							$action = "shower";
+							$command = "write%20data&dt=0x33&index=202&data=4&da=0x1&disable_time=". strval(time() + 60*60) ."&action=" . $action;
 							break;
 						case 2:
 							$action = "heaterfilling";
+							$command = "write%20data&dt=0x33&index=204&data=2&da=0x1&disable_time=". strval(time() + 60*60) ."&action=" . $action;
 							break;
 						case 3:
 							$action = "watering";
+							$command = "write%20data&dt=0x33&index=203&data=10&da=0x1&disable_time=". strval(time() + 60*60) ."&action=" . $action;
 							break;
 						case 4:
 							$action = "washing";
+							$command = "write%20data&dt=0x33&index=205&data=2&da=0x1&disable_time=". strval(time() + 60*60) ."&action=" . $action;
 							break;
 						
 						default:
 							break;
 					}
-					$command = "write%20data&dt=0x33&index=202&data=4&da=0x1&disable_time=". strval(time() + 60*60) ."action=" . $action;
+					
 					$parameter = 0;
 					break;
 					
