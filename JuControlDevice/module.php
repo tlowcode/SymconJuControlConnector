@@ -125,13 +125,14 @@ require_once('Webclient.php');
 				. $command . '&parameter=' . $parameter;
 
 				$response = $wc->Navigate($deviceCommandUrl);
+				$json = json_decode($response);
 
 				if(isset($json->status) && $json->status == 'ok')
 				{
 					SetValue($this->GetIDForIdent($Ident), $Value);
 				}
 				else{
-					echo "There was an error updating the value!";
+					echo "There was an error updating the value! Raw: " . $response;
 				}
 			}
 
