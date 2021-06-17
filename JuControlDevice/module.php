@@ -121,7 +121,7 @@ require_once('Webclient.php');
 					$parameter = strval($Value);
 					break;
 				case "activeScene":
-					
+				https://www.myjudo.eu/interface/?token=6bbf50ccc2be233c95100b1d667d818f&group=register&command=write%20data&serial_number=682719c9cbc3&dt=0x33&index=205&data=2&da=0x1&role=customer&action=washing&disable_time=1623973983
 					switch ($Value) {
 						case 0:
 							$action = "normal";
@@ -159,7 +159,7 @@ require_once('Webclient.php');
 			if($command != "none"){
 				$deviceCommandUrl = $url 
 				. '/interface/?token=' . $this->ReadAttributeString("AccessToken") 
-				. '&serialnumber=' . GetValue($this->GetIDForIdent("deviceSN"))
+				. '&serial_number=' . GetValue($this->GetIDForIdent("deviceSN"))
 				. '&group=register&command=' 
 				. $command . '&parameter=' . $parameter;
 
