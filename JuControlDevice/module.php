@@ -172,7 +172,7 @@ require_once('Webclient.php');
 				}
 				else{
 					echo "There was an error updating the value! Raw: " . $response;
-					echo $deviceCommandUrl;
+					IPS_LogMessage($this->InstanceID, 'Error during URL: '. $deviceCommandUrl .' / response: ' . $response);
 				}
 			}
 
