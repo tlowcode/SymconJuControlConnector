@@ -61,9 +61,16 @@ require_once('Webclient.php');
 			$this->RegisterVariableString("totalService", "Gesamt-Wartungen", "", 17);
 
 			$this->RegisterVariableInteger("Hardness_Washing", "Szenen-Wasserhärte Waschen", "JCD.dH_int", 18);
+			$this->EnableAction("Hardness_Washing");
+
 			$this->RegisterVariableInteger("Hardness_Heater", "Szenen-Wasserhärte Heizung", "JCD.dH_int", 19);
+			$this->EnableAction("Hardness_Heater");
+
 			$this->RegisterVariableInteger("Hardness_Watering", "Szenen-Wasserhärte Bewässerung", "JCD.dH_int", 20);
+			$this->EnableAction("Hardness_Watering");
+
 			$this->RegisterVariableInteger("Hardness_Shower", "Szenen-Wasserhärte Duschen", "JCD.dH_int", 21);
+			$this->EnableAction("Hardness_Shower");
 
 			$this->SetStatus(104);
 
@@ -84,17 +91,52 @@ require_once('Webclient.php');
 		/* wird aufgerufen, wenn eine Variable geändert wird */
 		public function RequestAction($Ident, $Value) {
  
+			$wc = new WebClient();
+			$url = 'https://www.myjudo.eu';
+			$command = "none";
+
 			switch($Ident) {
-				case "TestVariable":
-					//Hier würde normalerweise eine Aktion z.B. das Schalten ausgeführt werden
-					//Ausgaben über 'echo' werden an die Visualisierung zurückgeleitet
-		 
-					//Neuen Wert in die Statusvariable schreiben
-					SetValue($this->GetIDForIdent($Ident), $Value);
+				case "Hardness_Washing":
+					$command = "set%20waterscene%20washing";
+					$parameter = strval($Value);
 					break;
+				case "Hardness_Heater":
+					$command = "set%20waterscene%20heater";
+					$parameter = strval($Value);
+				break;
+				case "Hardness_Watering":
+					$command = "set%20waterscene%20watering";
+					$parameter = strval($Value);
+				break;
+				case "Hardness_Shower":
+					$command = "set%20waterscene%20shower";
+					$parameter = strval($Value);
+				break;
+
 				default:
 					throw new Exception("Invalid Ident");
 			}
+
+			if($command != "none"){
+				$deviceCommandUrl = $url 
+				. '/interface/?token=' . $this->ReadAttributeString("AccessToken") 
+				. '&serialnumber=' . GetValue($this->GetIDForIdent("deviceSN"))
+				. '&group=register&command=' 
+				. $command . '&parameter=' . $parameter;
+
+				$response = $wc->Navigate($deviceCommandUrl);
+
+				if(isset($json->status) && $json->status == 'ok')
+				{
+					SetValue($this->GetIDForIdent($Ident), $Value);
+				}
+				else{
+					echo "There was an error updating the value!"
+				}
+			}
+
+
+
 		 
 		}
 
