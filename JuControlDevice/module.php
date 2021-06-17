@@ -41,8 +41,15 @@ require_once('Webclient.php');
 
 			$this->RegisterVariableInteger("batteryState", "Batteriezustand Notstrommodul", "JCD.Percent", 8);
 
+			$this->RegisterProfileInteger("JCD.Waterscene", "Drops", "", "", 0, 10, 1);
+			IPS_SetVariableProfileAssociation ("JCD.Waterscene", 0, "Normal", "Ok", 0x00FF00);
+			IPS_SetVariableProfileAssociation ("JCD.Waterscene", 1, "Duschen", "Shower", 0xFF9C00);
+			IPS_SetVariableProfileAssociation ("JCD.Waterscene", 2, "Heizungsfüllung", "Temperature", 0xFF9C00);
+			IPS_SetVariableProfileAssociation ("JCD.Waterscene", 3, "Bewässerung", "Drops	", 0xFF9C00);
+			IPS_SetVariableProfileAssociation ("JCD.Waterscene", 4, "Waschen", "Pants", 0xFF9C00);
 
-			$this->RegisterVariableString("activeScene", "Aktive Wasserszene", "", 9);
+
+			$this->RegisterVariableInteger("activeScene", "Aktive Wasserszene", "JCD.Waterscene", 9);
 			$this->EnableAction("activeScene");
 
 
@@ -104,15 +111,41 @@ require_once('Webclient.php');
 				case "Hardness_Heater":
 					$command = "set%20waterscene%20heaterfilling";
 					$parameter = strval($Value);
-				break;
+					break;
 				case "Hardness_Watering":
 					$command = "set%20waterscene%20watering";
 					$parameter = strval($Value);
-				break;
+					break;
 				case "Hardness_Shower":
 					$command = "set%20waterscene%20shower";
 					$parameter = strval($Value);
-				break;
+					break;
+				case "activeScene":
+					
+					switch ($Value) {
+						case 0:
+							$action = "normal";
+							break;
+						case 1:
+							$action = "shower";
+							break;
+						case 2:
+							$action = "heaterfilling";
+							break;
+						case 3:
+							$action = "watering";
+							break;
+						case 4:
+							$action = "washing";
+							break;
+						
+						default:
+							break;
+					}
+					$command = "write%20data&dt=0x33&index=202&data=4&da=0x1&disable_time=". strval(time() + 60*60) ."action=" . $action;
+					$parameter = 0;
+					break;
+					
 
 				default:
 					throw new Exception("Invalid Ident");
@@ -137,7 +170,7 @@ require_once('Webclient.php');
 				}
 			}
 
-
+			$this->RefreshData();
 
 		 
 		}
@@ -181,7 +214,36 @@ require_once('Webclient.php');
 					SetValue($this->GetIDForIdent("ccuVersion"), $json->data[0]->sv);
 
 					/* Active scene */
-					SetValue($this->GetIDForIdent("activeScene"), $json->data[0]->waterscene);
+					$sceneValue = -1;
+					switch ($json->data[0]->waterscene) {
+						case 'normal':
+							$sceneValue = 0;
+							break;
+						case 'shower':
+							$sceneValue = 1;
+							break;
+						case 'heaterfilling':
+							$sceneValue = 2;
+							break;
+						case 'watering':
+							$sceneValue = 3;
+							break;
+						case 'washing':
+							$sceneValue = 4;
+							break;
+						
+						default:
+							$sceneValue = -1;
+							break;
+					}
+
+					if($sceneValue != -1)
+						SetValue($this->GetIDForIdent("activeScene"), $sceneValue);
+						else
+						{
+							echo "Wrong scene detected: " . $json->data[0]->waterscene;
+						}
+
 
 					/* HW Version */
 					$hwMinor = intval(explode('.', $json->data[0]->data[0]->hv, 2)[1], 10);
