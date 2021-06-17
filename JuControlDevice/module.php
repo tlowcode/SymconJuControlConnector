@@ -328,23 +328,22 @@ require_once('Webclient.php');
 					SetValue($this->GetIDForIdent("Hardness_Watering"), intval($json->data[0]->hardness_watering));
 					SetValue($this->GetIDForIdent("Hardness_Heater"), intval($json->data[0]->hardness_heater));
 
-					
 
 					/* check waterscene and update target hardness */
 					switch (GetValue($this->GetIDForIdent("activeScene"))) {
-						case 'washing':
+						case '4':
 							SetValue($this->GetIDForIdent("targetHardness"), intval($json->data[0]->hardness_washing));
 							break;
-						case 'shower':
+						case '1':
 							SetValue($this->GetIDForIdent("targetHardness"), intval($json->data[0]->hardness_shower));
 							break;
-						case 'watering':
+						case '3':
 							SetValue($this->GetIDForIdent("targetHardness"), intval($json->data[0]->hardness_watering));
 							break;
-						case 'heater':
+						case '2':
 							SetValue($this->GetIDForIdent("targetHardness"), intval($json->data[0]->hardness_heater));
 							break;
-						case 'normal':							
+						case '0':							
 						default:
 							/* do not update */
 							break;
