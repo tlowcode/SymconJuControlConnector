@@ -43,6 +43,7 @@ require_once('Webclient.php');
 
 
 			$this->RegisterVariableString("activeScene", "Aktive Wasserszene", "", 9);
+			$this->EnableAction("activeScene");
 
 
 			$this->RegisterVariableString("swVersion", "SW Version", "", 10);
@@ -101,7 +102,7 @@ require_once('Webclient.php');
 					$parameter = strval($Value);
 					break;
 				case "Hardness_Heater":
-					$command = "set%20waterscene%20heater";
+					$command = "set%20waterscene%20heaterfilling";
 					$parameter = strval($Value);
 				break;
 				case "Hardness_Watering":
