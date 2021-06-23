@@ -2,7 +2,7 @@
     "elements": [
         {
             "type": "ExpansionPanel",
-            "caption": "Advanced Settings",
+            "caption": "Basic Settings",
             "items": [
                 {
                     "name": "Username",
@@ -13,6 +13,11 @@
                     "name": "Passwort",
                     "type": "PasswordTextBox",
                     "caption": "Passwort"
+                },
+                {
+                    "name": "RefreshRate",
+                    "type": "ValidationTextBox",
+                    "caption": "Refresh Rate"
                 }
             ]
         }

@@ -16,6 +16,7 @@ require_once('Webclient.php');
 
 			$this->RegisterPropertyString("Username", "");
 			$this->RegisterPropertyString("Passwort", "");
+			$this->RegisterPropertyInteger("RefreshRate", 60 * 1000);
 
 
 
@@ -80,6 +81,9 @@ require_once('Webclient.php');
 			$this->RegisterVariableInteger("Hardness_Shower", "Szenen-Wasserhärte Duschen", "JCD.dH_int", 21);
 			$this->EnableAction("Hardness_Shower");
 
+			$this->RegisterProfileInteger("JCD.Minutes", "Clock", "", " Minuten", 0, 1000, 1);
+			$this->RegisterVariableInteger("remainingTime", "Restlaufzeit Szene", "JCD.Days", 22);
+
 			$this->SetStatus(104);
 
 		}
@@ -94,6 +98,7 @@ require_once('Webclient.php');
 		{
 			//Never delete this line!
 			parent::ApplyChanges();
+			$this->Login();
 		}
 
 		/* wird aufgerufen, wenn eine Variable geändert wird */
@@ -189,8 +194,9 @@ require_once('Webclient.php');
 			$response = $wc->Navigate($deviceDataUrl);
 	
 			if ($response === FALSE) {
-				$this->SetStatus(104);
-				$this->SetTimerInterval("RefreshTimer", 0);
+				//$this->SetStatus(104);
+				//$this->SetTimerInterval("RefreshTimer", 0);
+				IPS_LogMessage($this->InstanceID, 'Error during data crawling!');
 			}
 			else {
 				$json = json_decode($response);
@@ -349,6 +355,18 @@ require_once('Webclient.php');
 							break;
 					}
 
+					/* Remaining time of active water scene */
+					if(GetValue($this->GetIDForIdent("activeScene")) != 0 && $json->data[0]->disable_time != '')
+					{
+						$remainingTime = (intval($json->data[0]->disable_time) - time()) / 60 ;
+						SetValue($this->GetIDForIdent("remainingTime"), $remainingTime);
+					}
+					else
+					{
+						SetValue($this->GetIDForIdent("remainingTime"), 0);
+					}
+					
+
 
 				}
 				else
@@ -389,7 +407,9 @@ require_once('Webclient.php');
 					IPS_LogMessage($this->InstanceID, 'Login successful, Token: '. $json->token);
 					$this->WriteAttributeString("AccessToken", $json->token);
 					$this->SetStatus(102);
-					$this->SetTimerInterval("RefreshTimer", 60 * 1000);
+					
+					$refreshRate = $this->ReadPropertyInteger("RefreshRate");
+					$this->SetTimerInterval("RefreshTimer", $refreshRate * 1000);
 				}
 				else
 				{
