@@ -82,7 +82,7 @@ require_once('Webclient.php');
 			$this->EnableAction("Hardness_Shower");
 
 			$this->RegisterProfileInteger("JCD.Minutes", "Clock", "", " Minuten", 0, 1000, 1);
-			$this->RegisterVariableInteger("remainingTime", "Restlaufzeit Szene", "JCD.Days", 22);
+			$this->RegisterVariableInteger("remainingTime", "Restlaufzeit Szene", "JCD.Minutes", 22);
 
 			$this->SetStatus(104);
 
