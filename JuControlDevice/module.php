@@ -130,23 +130,28 @@ require_once('Webclient.php');
 					switch ($Value) {
 						case 0:
 							$action = "normal";
-							$command = "write%20data&dt=0x33&index=201&data=2&da=0x1&disable_time=" ."&action=" . $action;
+							$hardness = GetGetValue($this->GetIDForIdent("targetHardness"));
+							$command = "write%20data&dt=0x33&index=201&data=". strval($hardness) . "&da=0x1&disable_time=" ."&action=" . $action;
 							break;
 						case 1:
 							$action = "shower";
-							$command = "write%20data&dt=0x33&index=202&data=4&da=0x1&disable_time=". strval(time() + 60*60) ."&action=" . $action;
+							$hardness = GetGetValue($this->GetIDForIdent("Hardness_Shower"));
+							$command = "write%20data&dt=0x33&index=202&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + 60*60) ."&action=" . $action;
 							break;
 						case 2:
 							$action = "heaterfilling";
-							$command = "write%20data&dt=0x33&index=204&data=2&da=0x1&disable_time=". strval(time() + 60*60) ."&action=" . $action;
+							$hardness = GetGetValue($this->GetIDForIdent("Hardness_Heater"));
+							$command = "write%20data&dt=0x33&index=204&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + 60*60) ."&action=" . $action;
 							break;
 						case 3:
 							$action = "watering";
-							$command = "write%20data&dt=0x33&index=203&data=10&da=0x1&disable_time=". strval(time() + 60*60) ."&action=" . $action;
+							$hardness = GetGetValue($this->GetIDForIdent("Hardness_Watering"));
+							$command = "write%20data&dt=0x33&index=203&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + 60*60) ."&action=" . $action;
 							break;
 						case 4:
 							$action = "washing";
-							$command = "write%20data&dt=0x33&index=205&data=2&da=0x1&disable_time=". strval(time() + 60*60) ."&action=" . $action;
+							$hardness = GetGetValue($this->GetIDForIdent("Hardness_Washing"));
+							$command = "write%20data&dt=0x33&index=205&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + 60*60) ."&action=" . $action;
 							break;
 						
 						default:
@@ -155,7 +160,6 @@ require_once('Webclient.php');
 					
 					$parameter = 0;
 					break;
-					
 
 				default:
 					throw new Exception("Invalid Ident");
