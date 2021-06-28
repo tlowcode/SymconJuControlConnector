@@ -343,7 +343,7 @@ require_once('Webclient.php');
 					SetValue($this->GetIDForIdent("Hardness_Shower"), intval($json->data[0]->hardness_shower));
 					SetValue($this->GetIDForIdent("Hardness_Watering"), intval($json->data[0]->hardness_watering));
 					SetValue($this->GetIDForIdent("Hardness_Heater"), intval($json->data[0]->hardness_heater));
-
+					SetValue($this->GetIDForIdent("Hardness_Normal"), intval($json->data[0]->waterscene_normal));
 
 					/* check waterscene and update target hardness */
 					switch (GetValue($this->GetIDForIdent("activeScene"))) {
