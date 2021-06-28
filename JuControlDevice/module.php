@@ -81,8 +81,11 @@ require_once('Webclient.php');
 			$this->RegisterVariableInteger("Hardness_Shower", "Szenen-Wasserhärte Duschen", "JCD.dH_int", 21);
 			$this->EnableAction("Hardness_Shower");
 
+			$this->RegisterVariableInteger("Hardness_Normal", "Szenen-Wasserhärte Normal", "JCD.dH_int", 22);
+			$this->EnableAction("Hardness_Normal");
+
 			$this->RegisterProfileInteger("JCD.Minutes", "Clock", "", " Minuten", 0, 1000, 1);
-			$this->RegisterVariableInteger("remainingTime", "Restlaufzeit Szene", "JCD.Minutes", 22);
+			$this->RegisterVariableInteger("remainingTime", "Restlaufzeit Szene", "JCD.Minutes", 23);
 
 			$this->SetStatus(104);
 
@@ -124,6 +127,9 @@ require_once('Webclient.php');
 				case "Hardness_Shower":
 					$command = "set%20waterscene%20shower";
 					$parameter = strval($Value);
+					break;
+				case "Hardness_Normal":
+					$command = "write%20data&dt=0x33&index=60&data=". strval($Value) . "&da=0x1&&action=normal";
 					break;
 				case "activeScene":
 				https://www.myjudo.eu/interface/?token=6bbf50ccc2be233c95100b1d667d818f&group=register&command=write%20data&serial_number=682719c9cbc3&dt=0x33&index=205&data=2&da=0x1&role=customer&action=washing&disable_time=1623973983
