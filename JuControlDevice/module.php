@@ -130,33 +130,34 @@ require_once('Webclient.php');
 					break;
 				case "Hardness_Normal":
 					$command = "write%20data&dt=0x33&index=60&data=". strval($Value) . "&da=0x1&&action=normal";
+					$parameter = 0;
 					break;
 				case "activeScene":
 				https://www.myjudo.eu/interface/?token=6bbf50ccc2be233c95100b1d667d818f&group=register&command=write%20data&serial_number=682719c9cbc3&dt=0x33&index=205&data=2&da=0x1&role=customer&action=washing&disable_time=1623973983
 					switch ($Value) {
 						case 0:
 							$action = "normal";
-							$hardness = GetGetValue($this->GetIDForIdent("targetHardness"));
+							$hardness = GetValue($this->GetIDForIdent("targetHardness"));
 							$command = "write%20data&dt=0x33&index=201&data=". strval($hardness) . "&da=0x1&disable_time=" ."&action=" . $action;
 							break;
 						case 1:
 							$action = "shower";
-							$hardness = GetGetValue($this->GetIDForIdent("Hardness_Shower"));
+							$hardness = GetValue($this->GetIDForIdent("Hardness_Shower"));
 							$command = "write%20data&dt=0x33&index=202&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + 60*60) ."&action=" . $action;
 							break;
 						case 2:
 							$action = "heaterfilling";
-							$hardness = GetGetValue($this->GetIDForIdent("Hardness_Heater"));
+							$hardness = GetValue($this->GetIDForIdent("Hardness_Heater"));
 							$command = "write%20data&dt=0x33&index=204&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + 60*60) ."&action=" . $action;
 							break;
 						case 3:
 							$action = "watering";
-							$hardness = GetGetValue($this->GetIDForIdent("Hardness_Watering"));
+							$hardness = GetValue($this->GetIDForIdent("Hardness_Watering"));
 							$command = "write%20data&dt=0x33&index=203&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + 60*60) ."&action=" . $action;
 							break;
 						case 4:
 							$action = "washing";
-							$hardness = GetGetValue($this->GetIDForIdent("Hardness_Washing"));
+							$hardness = GetValue($this->GetIDForIdent("Hardness_Washing"));
 							$command = "write%20data&dt=0x33&index=205&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + 60*60) ."&action=" . $action;
 							break;
 						
