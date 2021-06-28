@@ -137,7 +137,7 @@ require_once('Webclient.php');
 					switch ($Value) {
 						case 0:
 							$action = "normal";
-							$hardness = GetValue($this->GetIDForIdent("targetHardness"));
+							$hardness = GetValue($this->GetIDForIdent("Hardness_Normal"));
 							$command = "write%20data&dt=0x33&index=201&data=". strval($hardness) . "&da=0x1&disable_time=" ."&action=" . $action;
 							break;
 						case 1:
