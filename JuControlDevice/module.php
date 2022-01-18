@@ -207,7 +207,6 @@ require_once('Webclient.php');
 			if ($response === FALSE) {
 				//$this->SetStatus(104);
 				//$this->SetTimerInterval("RefreshTimer", 0);
-				$this->LogMessage()
 				IPS_LogMessage($this->InstanceID, 'Error during data crawling!');
 			}
 			else {
