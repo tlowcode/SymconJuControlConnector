@@ -207,6 +207,7 @@ require_once('Webclient.php');
 			if ($response === FALSE) {
 				//$this->SetStatus(104);
 				//$this->SetTimerInterval("RefreshTimer", 0);
+				$this->LogMessage()
 				IPS_LogMessage($this->InstanceID, 'Error during data crawling!');
 			}
 			else {
@@ -235,6 +236,17 @@ require_once('Webclient.php');
 
 					/* Connectivity module version */
 					SetValue($this->GetIDForIdent("ccuVersion"), $json->data[0]->sv);
+
+					/* Emergency supply available */
+					$emergencySupply = intval("0x"+substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 2, 2));
+					if ($emergencySupply === 2 || $emergencySupply === 3)
+					{
+						SetValue($this->GetIDForIdent("hasEmergencySupply"), "Ja");
+					}
+					else{
+						SetValue($this->GetIDForIdent("hasEmergencySupply"), "Nein");
+					}
+					
 
 					/* Active scene */
 					$sceneValue = -1;
