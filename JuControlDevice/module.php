@@ -143,7 +143,7 @@ require_once('Webclient.php');
 						case 1:
 							$action = "shower";
 							$hardness = GetValue($this->GetIDForIdent("Hardness_Shower"));
-							$command = "write%20data&dt=0x33&index=202&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + 1*60) ."&action=" . $action;
+							$command = "write%20data&dt=0x33&index=202&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + 60*60) ."&action=" . $action;
 							break;
 						case 2:
 							$action = "heaterfilling";
