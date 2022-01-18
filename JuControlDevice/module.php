@@ -242,7 +242,7 @@ require_once('Webclient.php');
 					{
 						SetValue($this->GetIDForIdent("hasEmergencySupply"), "Ja");
 						/* Battery percentage */
-						$batteryPercentage = intval("0x"+substr(explode(':',$json->data[0]->data[0]->data->{93}->data)[1], 6, 2));
+						$batteryPercentage = intval("0x"+substr($json->data[0]->data[0]->data->{93}->data, 6, 2));
 						SetValue($this->GetIDForIdent("batteryState"), $batteryPercentage);
 					}
 					else{
