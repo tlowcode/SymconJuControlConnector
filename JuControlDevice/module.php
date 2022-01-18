@@ -237,12 +237,12 @@ require_once('Webclient.php');
 					SetValue($this->GetIDForIdent("ccuVersion"), $json->data[0]->sv);
 
 					/* Emergency supply available */
-					$emergencySupply = hexdec("0x"+substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 2, 2));
+					$emergencySupply = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 2, 2));
 					if ($emergencySupply === 2 || $emergencySupply === 3)
 					{
 						SetValue($this->GetIDForIdent("hasEmergencySupply"), "Ja");
 						/* Battery percentage */
-						$batteryPercentage = hexdec("0x"+substr($json->data[0]->data[0]->data->{93}->data, 6, 2));
+						$batteryPercentage = hexdec(substr($json->data[0]->data[0]->data->{93}->data, 6, 2));
 						SetValue($this->GetIDForIdent("batteryState"), $batteryPercentage);
 					}
 					else{
