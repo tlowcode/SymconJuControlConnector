@@ -241,10 +241,15 @@ require_once('Webclient.php');
 					if ($emergencySupply === 2 || $emergencySupply === 3)
 					{
 						SetValue($this->GetIDForIdent("hasEmergencySupply"), "Ja");
+						/* Battery percentage */
+						$batteryPercentage = intval("0x"+substr(explode(':',$json->data[0]->data[0]->data->{93}->data)[1], 6, 2));
+						SetValue($this->GetIDForIdent("batteryState"), $batteryPercentage);
 					}
 					else{
 						SetValue($this->GetIDForIdent("hasEmergencySupply"), "Nein");
 					}
+
+					
 					
 
 					/* Active scene */
