@@ -387,6 +387,10 @@ require_once('Webclient.php');
 					{
 						$remainingTime = (intval($json->data[0]->disable_time) - time()) / 60 ;
 						SetValue($this->GetIDForIdent("remainingTime"), $remainingTime);
+						if ($remainingTime == 0)
+						{
+							SetValue($this->GetIDForIdent("activeScene"), 0);
+						}
 					}
 					else
 					{
