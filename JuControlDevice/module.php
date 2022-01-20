@@ -1,7 +1,9 @@
 <?php
 
 declare(strict_types=1);
-require_once('Webclient.php');
+
+require_once __DIR__ . '/../libs/Webclient.php';
+require_once __DIR__ . '/../libs/ConstHelper.php';
 
 	class JuControlDevice extends IPSModule
 	{
@@ -133,7 +135,6 @@ require_once('Webclient.php');
 					$parameter = 0;
 					break;
 				case "activeScene":
-				https://www.myjudo.eu/interface/?token=6bbf50ccc2be233c95100b1d667d818f&group=register&command=write%20data&serial_number=682719c9cbc3&dt=0x33&index=205&data=2&da=0x1&role=customer&action=washing&disable_time=1623973983
 					switch ($Value) {
 						case 0:
 							$action = "normal";
@@ -187,8 +188,7 @@ require_once('Webclient.php');
 					SetValue($this->GetIDForIdent($Ident), $Value);
 				}
 				else{
-					echo "There was an error updating the value! Raw: " . $response;
-					IPS_LogMessage($this->InstanceID, 'Error during URL: '. $deviceCommandUrl .' / response: ' . $response);
+					$this->SendDebug('JuControlDevice:', 'Error during request to JuControl API: '. $deviceCommandUrl .' / response: ' . $response, 0);
 				}
 			}
 
@@ -207,12 +207,13 @@ require_once('Webclient.php');
 			if ($response === FALSE) {
 				//$this->SetStatus(104);
 				//$this->SetTimerInterval("RefreshTimer", 0);
-				IPS_LogMessage($this->InstanceID, 'Error during data crawling!');
+				$this->SendDebug('JuControlDevice:', 'Error during request to JuControl API: '. $deviceDataUrl, 0);
 			}
 			else {
 				$json = json_decode($response);
 				if(isset($json->status) && $json->status == 'ok')
 				{
+					$this->SendDebug('JuControlDevice received data:', $json, 0);
 					/* Parse response */
 					$this->SetStatus(102);
 					if ($json->data[0]->data[0]->dt == '0x33')
@@ -223,7 +224,7 @@ require_once('Webclient.php');
 					{
 						$this->SetStatus(104);
 						$this->SetStatus(202);
-						IPS_LogMessage($this->InstanceID, 'Wrong device type found! -> Aborting!');
+						$this->SendDebug('JuControlDevice received data:', 'Wrong device type: (' . $json->data[0]->data[0]->dt . ') found -> Aborting!', 0);
 						$this->SetTimerInterval("RefreshTimer", 0);
 					}
 			
@@ -278,10 +279,7 @@ require_once('Webclient.php');
 
 					if($sceneValue != -1)
 						SetValue($this->GetIDForIdent("activeScene"), $sceneValue);
-						else
-						{
-							echo "Wrong scene detected: " . $json->data[0]->waterscene;
-						}
+		
 
 
 					/* HW Version */
@@ -334,7 +332,9 @@ require_once('Webclient.php');
 
 					/* Count service */
 					$countService = hexdec($this->formatEndian(substr($json->data[0]->data[0]->data->{7}->data, 8, 4) . '0000', 'N'));
-					SetValue($this->GetIDForIdent("totalService"), $countService);
+					//SetValue($this->GetIDForIdent("totalService"), $countService);
+
+					updateIfNecessary($countService, "totalService");
 
 					/* Range Salt */
 					$lowRangeSaltPercent = substr($json->data[0]->data[0]->data->{94}->data, 0, 2);
@@ -423,7 +423,8 @@ require_once('Webclient.php');
 
 			$loginUrl = $url . '/interface/?group=register&command=login&name=login&user=' . $username . '&password=' . md5($passwd, false) . '&nohash=' . $passwd . '&role=customer';
 		
-			IPS_LogMessage($this->InstanceID, 'Trying to login with username: '. $username);
+			$this->SendDebug('JuControlDevice:', 'Trying to login with username: '. $username, 0);
+
 
 			$response = $wc->Navigate($loginUrl);
 			if ($response === FALSE) 
@@ -435,7 +436,7 @@ require_once('Webclient.php');
 				$json = json_decode($response);
 				if (isset($json->status) && $json->status == 'ok')
 				{
-					IPS_LogMessage($this->InstanceID, 'Login successful, Token: '. $json->token);
+					$this->SendDebug('JuControlDevice:', 'Login successful, Token: '. $json->token, 0);
 					$this->WriteAttributeString("AccessToken", $json->token);
 					$this->SetStatus(102);
 					
@@ -444,7 +445,7 @@ require_once('Webclient.php');
 				}
 				else
 				{
-					IPS_LogMessage($this->InstanceID, 'Login failed!');
+					$this->SendDebug('JuControlDevice:', 'Login failed!', 0);
 					$this->SetStatus(201);
 					$this->SetTimerInterval("RefreshTimer", 0);
 				}
@@ -497,5 +498,16 @@ require_once('Webclient.php');
 				IPS_SetVariableProfileIcon($Name, $Icon);
 				IPS_SetVariableProfileText($Name, $Prefix, $Suffix);
 				IPS_SetVariableProfileValues($Name, $MinValue, $MaxValue, $StepSize);        
+		}
+
+		private function updateIfNecessary($newValue, $ident)
+		{
+			$id = $this->GetIDForIdent($ident);
+			if(GetValue($id) != $newValue)
+			{
+				SetValue($id, $countService);
+				$this->SendDebug('JuControlDevice:', 'Updating variable ' . $id . 'to value: ' . $newValue, 0);
+			}
+				
 		}
 	}
