@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../libs/Webclient.php';
-require_once __DIR__ . '/../libs/ConstHelper.php';
+require_once __DIR__ . '/../libs/DebugHelper.php';
 
 	class JuControlDevice extends IPSModule
 	{
