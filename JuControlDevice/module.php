@@ -333,8 +333,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 					/* Count service */
 					$countService = hexdec($this->formatEndian(substr($json->data[0]->data[0]->data->{7}->data, 8, 4) . '0000', 'N'));
 					//SetValue($this->GetIDForIdent("totalService"), $countService);
-
-					updateIfNecessary($countService, "totalService");
+					$this->updateIfNecessary($countService, "totalService");
 
 					/* Range Salt */
 					$lowRangeSaltPercent = substr($json->data[0]->data[0]->data->{94}->data, 0, 2);
