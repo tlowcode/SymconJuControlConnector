@@ -147,25 +147,25 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 							break;
 						case 1:
 							$action = "shower";
-							$time = $this->ReadPropertyString("TimeShower");
+							$time = $this->ReadPropertyInteger("TimeShower");
 							$hardness = GetValue($this->GetIDForIdent("Hardness_Shower"));
 							$command = "write%20data&dt=0x33&index=202&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + $time*60) ."&action=" . $action;
 							break;
 						case 2:
 							$action = "heaterfilling";
-							$time = $this->ReadPropertyString("TimeHeating");
+							$time = $this->ReadPropertyInteger("TimeHeating");
 							$hardness = GetValue($this->GetIDForIdent("Hardness_Heater"));
 							$command = "write%20data&dt=0x33&index=204&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + $time*60) ."&action=" . $action;
 							break;
 						case 3:
 							$action = "watering";
-							$time = $this->ReadPropertyString("TimeWatering");
+							$time = $this->ReadPropertyInteger("TimeWatering");
 							$hardness = GetValue($this->GetIDForIdent("Hardness_Watering"));
 							$command = "write%20data&dt=0x33&index=203&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + $time*60) ."&action=" . $action;
 							break;
 						case 4:
 							$action = "washing";
-							$time = $this->ReadPropertyString("TimeWashing");
+							$time = $this->ReadPropertyInteger("TimeWashing");
 							$hardness = GetValue($this->GetIDForIdent("Hardness_Washing"));
 							$command = "write%20data&dt=0x33&index=205&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + $time*60) ."&action=" . $action;
 							break;
