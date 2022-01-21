@@ -385,12 +385,12 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 						$this->updateIfNecessary($remainingTime, "remainingTime");
 						if ($remainingTime == 0)
 						{
-							SetValue($this->GetIDForIdent("activeScene"), 0);
+							$this->updateIfNecessary(0, "remainingTime");
 						}
 					}
 					else
 					{
-						SetValue($this->GetIDForIdent("remainingTime"), 0);
+						$this->updateIfNecessary(0, "remainingTime");
 					}
 					
 
