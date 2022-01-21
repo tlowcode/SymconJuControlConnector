@@ -213,12 +213,11 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 				$json = json_decode($response);
 				if(isset($json->status) && $json->status == 'ok')
 				{
-					$this->SendDebug('JuControlDevice received data:', $json, 0);
 					/* Parse response */
 					$this->SetStatus(102);
 					if ($json->data[0]->data[0]->dt == '0x33')
 					{
-						SetValue($this->GetIDForIdent("deviceType"), 'i-soft safe');
+						$this->updateIfNecessary('i-soft safe', "deviceType");
 					}
 					else
 					{
@@ -229,25 +228,25 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 					}
 			
 					/* Device S/N */
-					SetValue($this->GetIDForIdent("deviceSN"), $json->data[0]->serialnumber);
+					$this->updateIfNecessary($json->data[0]->serialnumber, "deviceSN");
 			
 					/* Device state */
-					SetValue($this->GetIDForIdent("deviceState"), $json->data[0]->status);
+					$this->updateIfNecessary($json->data[0]->status, "deviceState");
 
 					/* Connectivity module version */
-					SetValue($this->GetIDForIdent("ccuVersion"), $json->data[0]->sv);
+					$this->updateIfNecessary($json->data[0]->sv, "ccuVersion");
 
 					/* Emergency supply available */
 					$emergencySupply = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 2, 2));
 					if ($emergencySupply === 2 || $emergencySupply === 3)
 					{
-						SetValue($this->GetIDForIdent("hasEmergencySupply"), "Ja");
+						$this->updateIfNecessary("Ja", "hasEmergencySupply");
 						/* Battery percentage */
 						$batteryPercentage = hexdec(substr($json->data[0]->data[0]->data->{93}->data, 6, 2));
-						SetValue($this->GetIDForIdent("batteryState"), $batteryPercentage);
+						$this->updateIfNecessary($batteryPercentage, "batteryState");
 					}
 					else{
-						SetValue($this->GetIDForIdent("hasEmergencySupply"), "Nein");
+						$this->updateIfNecessary("Nein", "hasEmergencySupply");
 					}
 
 					
@@ -278,7 +277,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 					}
 
 					if($sceneValue != -1)
-						SetValue($this->GetIDForIdent("activeScene"), $sceneValue);
+						$this->updateIfNecessary($sceneValue, "activeScene");
 		
 
 
@@ -294,8 +293,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 					{
 						$hwMinor = strval($hwMinor);
 					}
-			  
-					SetValue($this->GetIDForIdent("hwVersion"), $hwMajor . '.' . $hwMinor);
+					$this->updateIfNecessary($hwMajor . '.' . $hwMinor, "hwVersion");
 			
 			
 					/* SW Version */
@@ -310,70 +308,69 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 					{
 						$swMinor = strval($swMinor);
 					}
-			
-					SetValue($this->GetIDForIdent("swVersion"), $swMajor . '.' . $swMinor);
+					$this->updateIfNecessary($swMajor . '.' . $swMinor, "swVersion");
 			
 					/* Device ID */
 					$deviceIDhex = $this->formatEndian($json->data[0]->data[0]->data->{3}->data, 'N');
-					SetValue($this->GetIDForIdent("deviceID"), hexdec($deviceIDhex));
+					$this->updateIfNecessary(hexdec($deviceIDhex), "deviceID");
 
 					/* Total water*/
 					$totalWaterHex = $this->formatEndian($json->data[0]->data[0]->data->{8}->data, 'N');
-					SetValue($this->GetIDForIdent("totalWater"), hexdec($totalWaterHex));
+					$this->updateIfNecessary(hexdec($totalWaterHex), "totalWater");
 
 					/* Next service */
 					$hoursUntilNextService = hexdec($this->formatEndian(substr($json->data[0]->data[0]->data->{7}->data, 0, 4) . '0000', 'N'));
 					$daysUntilNextService = $hoursUntilNextService / 24;
-					SetValue($this->GetIDForIdent("nextService"), $daysUntilNextService);
+					$this->updateIfNecessary($daysUntilNextService, "nextService");
 
 					/* Count regenaration */
 					$countRegeneration = hexdec($this->formatEndian(substr(explode(':',$json->data[0]->data[0]->data->{791}->data)[1], 60, 4) . '0000', 'N'));
-					SetValue($this->GetIDForIdent("totalRegenaration"), $countRegeneration);
+					$this->updateIfNecessary($countRegeneration, "totalRegenaration");
 
 					/* Count service */
 					$countService = hexdec($this->formatEndian(substr($json->data[0]->data[0]->data->{7}->data, 8, 4) . '0000', 'N'));
-					//SetValue($this->GetIDForIdent("totalService"), $countService);
 					$this->updateIfNecessary($countService, "totalService");
 
 					/* Range Salt */
 					$lowRangeSaltPercent = substr($json->data[0]->data[0]->data->{94}->data, 0, 2);
 					$highRangeSaltPercent = substr($json->data[0]->data[0]->data->{94}->data, 2, 2);
 					$rangeSaltPercent = 2 * (hexdec($highRangeSaltPercent . $lowRangeSaltPercent) / 1000);		
-					SetValue($this->GetIDForIdent("rangeSaltPercent"), $rangeSaltPercent);
+					$this->updateIfNecessary($rangeSaltPercent, "rangeSaltPercent");
 
 					/* Input /target hardness */
 					$inputHardness = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 52, 2));
 					$targetHardness = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 16, 2));
-					SetValue($this->GetIDForIdent("inputHardness"), $inputHardness);
-					SetValue($this->GetIDForIdent("targetHardness"), $targetHardness);
+					$this->updateIfNecessary($inputHardness, "inputHardness");
+					$this->updateIfNecessary($targetHardness, "targetHardness");
 
 
 					/* currentFlow */
 					$lowCurrentFlow = substr(explode(':', $json->data[0]->data[0]->data->{790}->data)[1], 32, 2);
 					$highCurrentFlow = substr(explode(':', $json->data[0]->data[0]->data->{790}->data)[1], 34, 2);
 					$currentFlow = hexdec($highCurrentFlow . $lowCurrentFlow);
-					SetValue($this->GetIDForIdent("currentFlow"), $currentFlow);
+					$this->updateIfNecessary($currentFlow, "currentFlow");
 
 					/* read target hardness of waterscenes */
-					SetValue($this->GetIDForIdent("Hardness_Washing"), intval($json->data[0]->hardness_washing));
-					SetValue($this->GetIDForIdent("Hardness_Shower"), intval($json->data[0]->hardness_shower));
-					SetValue($this->GetIDForIdent("Hardness_Watering"), intval($json->data[0]->hardness_watering));
-					SetValue($this->GetIDForIdent("Hardness_Heater"), intval($json->data[0]->hardness_heater));
-					SetValue($this->GetIDForIdent("Hardness_Normal"), intval($json->data[0]->waterscene_normal));
+
+					$this->updateIfNecessary(intval($json->data[0]->hardness_washing), "Hardness_Washing");
+					$this->updateIfNecessary(intval($json->data[0]->hardness_shower), "Hardness_Shower");
+					$this->updateIfNecessary(intval($json->data[0]->hardness_watering), "Hardness_Watering");
+					$this->updateIfNecessary(intval($json->data[0]->hardness_heater), "Hardness_Heater");
+					$this->updateIfNecessary(intval($json->data[0]->waterscene_normal), "Hardness_Normal");
 
 					/* check waterscene and update target hardness */
 					switch (GetValue($this->GetIDForIdent("activeScene"))) {
 						case '4':
-							SetValue($this->GetIDForIdent("targetHardness"), intval($json->data[0]->hardness_washing));
+							$this->updateIfNecessary(intval($json->data[0]->hardness_washing), "targetHardness");
 							break;
 						case '1':
-							SetValue($this->GetIDForIdent("targetHardness"), intval($json->data[0]->hardness_shower));
+							$this->updateIfNecessary(intval($json->data[0]->hardness_shower), "targetHardness");
 							break;
 						case '3':
-							SetValue($this->GetIDForIdent("targetHardness"), intval($json->data[0]->hardness_watering));
+							$this->updateIfNecessary(intval($json->data[0]->hardness_watering), "targetHardness");
 							break;
 						case '2':
-							SetValue($this->GetIDForIdent("targetHardness"), intval($json->data[0]->hardness_heater));
+							$this->updateIfNecessary(intval($json->data[0]->hardness_heater), "targetHardness");
 							break;
 						case '0':							
 						default:
@@ -385,7 +382,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 					if(GetValue($this->GetIDForIdent("activeScene")) != 0 && $json->data[0]->disable_time != '')
 					{
 						$remainingTime = (intval($json->data[0]->disable_time) - time()) / 60 ;
-						SetValue($this->GetIDForIdent("remainingTime"), $remainingTime);
+						$this->updateIfNecessary($remainingTime, "remainingTime");
 						if ($remainingTime == 0)
 						{
 							SetValue($this->GetIDForIdent("activeScene"), 0);
