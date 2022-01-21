@@ -382,7 +382,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 					if(GetValue($this->GetIDForIdent("activeScene")) != 0 && $json->data[0]->disable_time != '')
 					{
 						$remainingTime = (intval($json->data[0]->disable_time) - time()) / 60 ;
-						$this->updateIfNecessary($remainingTime, "remainingTime");
+						$this->updateIfNecessary(intval($remainingTime), "remainingTime");
 						if ($remainingTime == 0)
 						{
 							$this->updateIfNecessary(0, "remainingTime");
