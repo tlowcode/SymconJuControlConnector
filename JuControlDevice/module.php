@@ -19,10 +19,10 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			$this->RegisterPropertyString("Username", "");
 			$this->RegisterPropertyString("Passwort", "");
 			$this->RegisterPropertyInteger("RefreshRate", 60 * 1000);
-			$this->RegisterPropertyInteger("TimeShower", 0);
-			$this->RegisterPropertyInteger("TimeHeating", 0);
-			$this->RegisterPropertyInteger("TimeWatering", 0);
-			$this->RegisterPropertyInteger("TimeWashing", 0);
+			$this->RegisterPropertyInteger("TimeShower", 60);
+			$this->RegisterPropertyInteger("TimeHeating", 60);
+			$this->RegisterPropertyInteger("TimeWatering", 60);
+			$this->RegisterPropertyInteger("TimeWashing", 60);
 
 
 
