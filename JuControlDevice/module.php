@@ -335,7 +335,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 					$lowRangeSaltPercent = substr($json->data[0]->data[0]->data->{94}->data, 0, 2);
 					$highRangeSaltPercent = substr($json->data[0]->data[0]->data->{94}->data, 2, 2);
 					$rangeSaltPercent = 2 * (hexdec($highRangeSaltPercent . $lowRangeSaltPercent) / 1000);		
-					$this->updateIfNecessary($rangeSaltPercent, "rangeSaltPercent");
+					$this->updateIfNecessary(intval($rangeSaltPercent), "rangeSaltPercent");
 
 					/* Input /target hardness */
 					$inputHardness = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 52, 2));
@@ -502,7 +502,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			if(GetValue($id) != $newValue)
 			{
 				SetValue($id, $newValue);
-				$this->SendDebug('JuControlDevice:', 'Updating variable ' . $id . 'to value: ' . $newValue, 0);
+				$this->SendDebug('JuControlDevice:', 'Updating variable ' . IPS_GetName($id) . ' to value: ' . $newValue, 0);
 			}
 				
 		}
