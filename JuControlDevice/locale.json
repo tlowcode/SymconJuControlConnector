@@ -1,8 +1,13 @@
 {
     "translations": {
         "de": {
-            "Translation 1": "Übersetzung 1",
-            "Translation 2": "Übersetzung 2"
+            "Username": "Benutzername",
+            "Password": "Passwort",
+            "Refresh Rate": "Aktualisierungs-Intervall",
+            "Water scene 'Shower' duration": "Laufzeit Wasserszene 'Duschen'",
+            "Water scene 'Heating' duration": "Laufzeit Wasserszene 'Heizung'",
+            "Water scene 'Watering' duration": "Laufzeit Wasserszene 'Bewässerung'",
+            "Water scene 'Washing' duration": "Laufzeit Wasserszene 'Waschen'"
         }
     }
 }

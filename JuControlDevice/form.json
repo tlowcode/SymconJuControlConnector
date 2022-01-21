@@ -10,14 +10,34 @@
                     "caption": "Username"
                 },
                 {
-                    "name": "Passwort",
+                    "name": "Password",
                     "type": "PasswordTextBox",
-                    "caption": "Passwort"
+                    "caption": "Password"
                 },
                 {
                     "name": "RefreshRate",
                     "type": "ValidationTextBox",
                     "caption": "Refresh Rate"
+                },
+                {
+                    "name": "TimeShower",
+                    "type": "ValidationTextBox",
+                    "caption": "Water scene 'Shower' duration"
+                },
+                {
+                    "name": "TimeHeating",
+                    "type": "ValidationTextBox",
+                    "caption": "Water scene 'Heating' duration"
+                },
+                {
+                    "name": "TimeWatering",
+                    "type": "ValidationTextBox",
+                    "caption": "Water scene 'Watering' duration"
+                },
+                {
+                    "name": "TimeWashing",
+                    "type": "ValidationTextBox",
+                    "caption": "Water scene 'Washing' duration"
                 }
             ]
         }

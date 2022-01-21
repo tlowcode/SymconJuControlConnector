@@ -19,6 +19,10 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			$this->RegisterPropertyString("Username", "");
 			$this->RegisterPropertyString("Passwort", "");
 			$this->RegisterPropertyInteger("RefreshRate", 60 * 1000);
+			$this->RegisterPropertyInteger("TimeShower", 0);
+			$this->RegisterPropertyInteger("TimeHeating", 0);
+			$this->RegisterPropertyInteger("TimeWatering", 0);
+			$this->RegisterPropertyInteger("TimeWashing", 0);
 
 
 
@@ -143,23 +147,27 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 							break;
 						case 1:
 							$action = "shower";
+							$time = $this->ReadPropertyString("TimeShower");
 							$hardness = GetValue($this->GetIDForIdent("Hardness_Shower"));
-							$command = "write%20data&dt=0x33&index=202&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + 60*60) ."&action=" . $action;
+							$command = "write%20data&dt=0x33&index=202&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + $time*60) ."&action=" . $action;
 							break;
 						case 2:
 							$action = "heaterfilling";
+							$time = $this->ReadPropertyString("TimeHeating");
 							$hardness = GetValue($this->GetIDForIdent("Hardness_Heater"));
-							$command = "write%20data&dt=0x33&index=204&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + 60*60) ."&action=" . $action;
+							$command = "write%20data&dt=0x33&index=204&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + $time*60) ."&action=" . $action;
 							break;
 						case 3:
 							$action = "watering";
+							$time = $this->ReadPropertyString("TimeWatering");
 							$hardness = GetValue($this->GetIDForIdent("Hardness_Watering"));
-							$command = "write%20data&dt=0x33&index=203&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + 60*60) ."&action=" . $action;
+							$command = "write%20data&dt=0x33&index=203&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + $time*60) ."&action=" . $action;
 							break;
 						case 4:
 							$action = "washing";
+							$time = $this->ReadPropertyString("TimeWashing");
 							$hardness = GetValue($this->GetIDForIdent("Hardness_Washing"));
-							$command = "write%20data&dt=0x33&index=205&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + 60*60) ."&action=" . $action;
+							$command = "write%20data&dt=0x33&index=205&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + $time*60) ."&action=" . $action;
 							break;
 						
 						default:
@@ -424,7 +432,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			$url = 'https://www.myjudo.eu';
 
 			$username = $this->ReadPropertyString("Username");
-			$passwd = $this->ReadPropertyString("Passwort");
+			$passwd = $this->ReadPropertyString("Password");
 
 			$loginUrl = $url . '/interface/?group=register&command=login&name=login&user=' . $username . '&password=' . md5($passwd, false) . '&nohash=' . $passwd . '&role=customer';
 		
