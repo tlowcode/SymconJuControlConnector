@@ -17,7 +17,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			$this->RegisterTimer("RefreshTimer", 0, 'JCD_RefreshData('. $this->InstanceID . ');');	
 
 			$this->RegisterPropertyString("Username", "");
-			$this->RegisterPropertyString("Passwort", "");
+			$this->RegisterPropertyString("Password", "");
 			$this->RegisterPropertyInteger("RefreshRate", 60 * 1000);
 			$this->RegisterPropertyInteger("TimeShower", 60);
 			$this->RegisterPropertyInteger("TimeHeating", 60);
