@@ -379,14 +379,23 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 					}
 
 					/* Remaining time of active water scene */
-					if(GetValue($this->GetIDForIdent("activeScene")) != 0 && $json->data[0]->disable_time != '')
+					if(GetValue($this->GetIDForIdent("activeScene")) != 0)
 					{
-						$remainingTime = (intval($json->data[0]->disable_time) - time()) / 60 ;
-						$this->updateIfNecessary(intval($remainingTime), "remainingTime");
-						if ($remainingTime == 0)
+						if($json->data[0]->disable_time != '')
+						{
+							$remainingTime = (intval($json->data[0]->disable_time) - time()) / 60 ;
+							$this->updateIfNecessary(intval($remainingTime), "remainingTime");
+							if ($remainingTime <= 0)
+							{
+								$this->updateIfNecessary(0, "remainingTime");
+							}
+						}
+						else
 						{
 							$this->updateIfNecessary(0, "remainingTime");
+							$this->updateIfNecessary(0, "activeScene");
 						}
+
 					}
 					else
 					{
