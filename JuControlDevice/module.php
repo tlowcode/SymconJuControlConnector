@@ -501,7 +501,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			$id = $this->GetIDForIdent($ident);
 			if(GetValue($id) != $newValue)
 			{
-				SetValue($id, $countService);
+				SetValue($id, $newValue);
 				$this->SendDebug('JuControlDevice:', 'Updating variable ' . $id . 'to value: ' . $newValue, 0);
 			}
 				
