@@ -217,6 +217,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 
 			if($command != "none"){
 
+				$this->SendDebug('JuControlDevice:', 'Requesting API URL '. $deviceCommandUrl, 0);
 				$response = $wc->Navigate($deviceCommandUrl);
 				$json = json_decode($response);
 
