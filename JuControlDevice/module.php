@@ -191,7 +191,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 				$this->SendDebug('JuControlDevice:', 'Requesting API URL '. $deviceCommandUrl, 0);
 				$response = $wc->Navigate($deviceCommandUrl);
 				$json = json_decode($response);
-				$this->SendDebug('JuControlDevice:', 'Received response from API: '. $response), 0);
+				$this->SendDebug('JuControlDevice:', 'Received response from API: '. $response, 0);
 
 				if(isset($json->status) && $json->status == 'ok')
 				{
