@@ -184,19 +184,21 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			if($command != "none"){
 				$deviceCommandUrl = $url 
 				. '/interface/?token=' . $this->ReadAttributeString("AccessToken") 
-				. '&serial_number=' . GetValue($this->GetIDForIdent("deviceSN"))
+				. '&serialnumber=' . GetValue($this->GetIDForIdent("deviceSN"))
 				. '&group=register&command=' 
 				. $command . '&parameter=' . $parameter;
 
+				$this->SendDebug('JuControlDevice:', 'Requesting API URL '. $deviceCommandUrl, 0);
 				$response = $wc->Navigate($deviceCommandUrl);
 				$json = json_decode($response);
+				$this->SendDebug('JuControlDevice:', 'Received response from API: '. $response), 0);
 
 				if(isset($json->status) && $json->status == 'ok')
 				{
 					SetValue($this->GetIDForIdent($Ident), $Value);
 				}
 				else{
-					$this->SendDebug('JuControlDevice:', 'Error during request to JuControl API: '. $deviceCommandUrl .' / response: ' . $response, 0);
+					$this->SendDebug('JuControlDevice:', 'Error during request to JuControl API, ', 0);
 				}
 			}
 
@@ -393,7 +395,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 						{
 							$remainingTime = (intval($json->data[0]->disable_time) - time()) / 60 ;
 							$this->updateIfNecessary(intval($remainingTime), "remainingTime");
-							if ($remainingTime <= 0)
+							if (intval($remainingTime) <= 0)
 							{
 								$this->updateIfNecessary(0, "remainingTime");
 							}
