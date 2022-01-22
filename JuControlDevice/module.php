@@ -115,28 +115,59 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
  
 			$wc = new WebClient();
 			$url = 'https://www.myjudo.eu';
+			$deviceCommandUrl = $url;
 			$command = "none";
 
 			switch($Ident) {
 				case "Hardness_Washing":
 					$command = "set%20waterscene%20washing";
 					$parameter = strval($Value);
+					$deviceCommandUrl = $deviceCommandUrl
+						. '/interface/' . '&command=' . $command
+						. '?token=' .$this->ReadAttributeString("AccessToken") 
+						. '&group=register' 
+						. '&serial_number=' . GetValue($this->GetIDForIdent("deviceSN"))
+						. '&parameter=' . $parameter;
 					break;
 				case "Hardness_Heater":
 					$command = "set%20waterscene%20heaterfilling";
 					$parameter = strval($Value);
+					$deviceCommandUrl = $deviceCommandUrl
+					. '/interface/' . '&command=' . $command
+					. '?token=' .$this->ReadAttributeString("AccessToken") 
+					. '&group=register' 
+					. '&serial_number=' . GetValue($this->GetIDForIdent("deviceSN"))
+					. '&parameter=' . $parameter;
 					break;
 				case "Hardness_Watering":
 					$command = "set%20waterscene%20watering";
 					$parameter = strval($Value);
+					$deviceCommandUrl = $deviceCommandUrl
+					. '/interface/' . '&command=' . $command
+					. '?token=' .$this->ReadAttributeString("AccessToken") 
+					. '&group=register' 
+					. '&serial_number=' . GetValue($this->GetIDForIdent("deviceSN"))
+					. '&parameter=' . $parameter;
 					break;
 				case "Hardness_Shower":
 					$command = "set%20waterscene%20shower";
 					$parameter = strval($Value);
+					$deviceCommandUrl = $deviceCommandUrl
+					. '/interface/' . '&command=' . $command
+					. '?token=' .$this->ReadAttributeString("AccessToken") 
+					. '&group=register' 
+					. '&serial_number=' . GetValue($this->GetIDForIdent("deviceSN"))
+					. '&parameter=' . $parameter;
 					break;
 				case "Hardness_Normal":
 					$command = "write%20data&dt=0x33&index=60&data=". strval($Value) . "&da=0x1&&action=normal";
 					$parameter = 0;
+					$deviceCommandUrl = $deviceCommandUrl
+					. '/interface/' . '&command=' . $command
+					. '?token=' .$this->ReadAttributeString("AccessToken") 
+					. '&group=register' 
+					. '&serial_number=' . GetValue($this->GetIDForIdent("deviceSN"))
+					. '&parameter=' . $parameter;
 					break;
 				case "activeScene":
 					switch ($Value) {
@@ -173,8 +204,11 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 						default:
 							break;
 					}
-					
-					$parameter = 0;
+					$deviceCommandUrl = $url 
+						. '/interface/?token=' . $this->ReadAttributeString("AccessToken") 
+						. '&serial_number=' . GetValue($this->GetIDForIdent("deviceSN"))
+						. '&group=register&command=' 
+						. $command
 					break;
 
 				default:
@@ -182,11 +216,6 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			}
 
 			if($command != "none"){
-				$deviceCommandUrl = $url 
-				. '/interface/?token=' . $this->ReadAttributeString("AccessToken") 
-				. '&serial_number=' . GetValue($this->GetIDForIdent("deviceSN"))
-				. '&group=register&command=' 
-				. $command . '&parameter=' . $parameter;
 
 				$response = $wc->Navigate($deviceCommandUrl);
 				$json = json_decode($response);
