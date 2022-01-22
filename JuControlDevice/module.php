@@ -116,6 +116,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			$wc = new WebClient();
 			$url = 'https://www.myjudo.eu';
 			$command = "none";
+			$strSerialnumber = '&serialnumber=';
 
 			switch($Ident) {
 				case "Hardness_Washing":
@@ -173,7 +174,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 						default:
 							break;
 					}
-					
+					$strSerialnumber = '&serial_number=';
 					$parameter = 0;
 					break;
 
@@ -184,7 +185,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			if($command != "none"){
 				$deviceCommandUrl = $url 
 				. '/interface/?token=' . $this->ReadAttributeString("AccessToken") 
-				. '&serialnumber=' . GetValue($this->GetIDForIdent("deviceSN"))
+				. $strSerialnumber . GetValue($this->GetIDForIdent("deviceSN"))
 				. '&group=register&command=' 
 				. $command . '&parameter=' . $parameter;
 
