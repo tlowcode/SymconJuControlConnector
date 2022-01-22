@@ -123,8 +123,8 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 					$command = "set%20waterscene%20washing";
 					$parameter = strval($Value);
 					$deviceCommandUrl = $deviceCommandUrl
-						. '/interface/' . '&command=' . $command
-						. '?token=' .$this->ReadAttributeString("AccessToken") 
+						. '/interface/' . '?command=' . $command
+						. '&token=' .$this->ReadAttributeString("AccessToken") 
 						. '&group=register' 
 						. '&serial_number=' . GetValue($this->GetIDForIdent("deviceSN"))
 						. '&parameter=' . $parameter;
@@ -133,8 +133,8 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 					$command = "set%20waterscene%20heaterfilling";
 					$parameter = strval($Value);
 					$deviceCommandUrl = $deviceCommandUrl
-					. '/interface/' . '&command=' . $command
-					. '?token=' .$this->ReadAttributeString("AccessToken") 
+					. '/interface/' . '?command=' . $command
+					. '&token=' .$this->ReadAttributeString("AccessToken") 
 					. '&group=register' 
 					. '&serial_number=' . GetValue($this->GetIDForIdent("deviceSN"))
 					. '&parameter=' . $parameter;
@@ -143,8 +143,8 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 					$command = "set%20waterscene%20watering";
 					$parameter = strval($Value);
 					$deviceCommandUrl = $deviceCommandUrl
-					. '/interface/' . '&command=' . $command
-					. '?token=' .$this->ReadAttributeString("AccessToken") 
+					. '/interface/' . '?command=' . $command
+					. '&token=' .$this->ReadAttributeString("AccessToken") 
 					. '&group=register' 
 					. '&serial_number=' . GetValue($this->GetIDForIdent("deviceSN"))
 					. '&parameter=' . $parameter;
@@ -153,8 +153,8 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 					$command = "set%20waterscene%20shower";
 					$parameter = strval($Value);
 					$deviceCommandUrl = $deviceCommandUrl
-					. '/interface/' . '&command=' . $command
-					. '?token=' .$this->ReadAttributeString("AccessToken") 
+					. '/interface/' . '?command=' . $command
+					. '&token=' .$this->ReadAttributeString("AccessToken") 
 					. '&group=register' 
 					. '&serial_number=' . GetValue($this->GetIDForIdent("deviceSN"))
 					. '&parameter=' . $parameter;
@@ -163,8 +163,8 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 					$command = "write%20data&dt=0x33&index=60&data=". strval($Value) . "&da=0x1&&action=normal";
 					$parameter = 0;
 					$deviceCommandUrl = $deviceCommandUrl
-					. '/interface/' . '&command=' . $command
-					. '?token=' .$this->ReadAttributeString("AccessToken") 
+					. '/interface/' . '?command=' . $command
+					. '&token=' .$this->ReadAttributeString("AccessToken") 
 					. '&group=register' 
 					. '&serial_number=' . GetValue($this->GetIDForIdent("deviceSN"))
 					. '&parameter=' . $parameter;
