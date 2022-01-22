@@ -208,7 +208,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 						. '/interface/?token=' . $this->ReadAttributeString("AccessToken") 
 						. '&serial_number=' . GetValue($this->GetIDForIdent("deviceSN"))
 						. '&group=register&command=' 
-						. $command
+						. $command;
 					break;
 
 				default:
