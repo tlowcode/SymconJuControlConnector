@@ -348,11 +348,9 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 					$rangeSaltPercent = 2 * (hexdec($highRangeSaltPercent . $lowRangeSaltPercent) / 1000);		
 					$this->updateIfNecessary(intval($rangeSaltPercent), "rangeSaltPercent");
 
-					/* Input /target hardness */
+					/* Input hardness */
 					$inputHardness = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 52, 2));
-					$targetHardness = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 16, 2));
 					$this->updateIfNecessary($inputHardness, "inputHardness");
-					$this->updateIfNecessary($targetHardness, "targetHardness");
 
 
 					/* currentFlow */
@@ -383,7 +381,10 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 						case '2':
 							$this->updateIfNecessary(intval($json->data[0]->hardness_heater), "targetHardness");
 							break;
-						case '0':							
+						case '0':
+							$targetHardness = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 16, 2));
+							$this->updateIfNecessary($targetHardness, "targetHardness");
+							break;							
 						default:
 							/* do not update */
 							break;
