@@ -282,7 +282,6 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 							case 'washing':
 								$sceneValue = 4;
 								break;
-							
 							default:
 								$sceneValue = 0;
 								break;
@@ -395,7 +394,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 						{
 							if($json->data[0]->disable_time != '')
 							{
-								$remainingTime = (intval($json->data[0]->disable_time) - time()) / 60 ;
+								$remainingTime = (intval(($json->data[0]->disable_time) - time() / 60)+1) ;
 								$this->updateIfNecessary(intval($remainingTime), "remainingTime");
 								if (intval($remainingTime) <= 0)
 								{
