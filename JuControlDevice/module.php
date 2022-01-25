@@ -210,6 +210,9 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 
 		public function RefreshData()
 		{
+			try {
+
+			}
 			$wc = new WebClient();
 			$url = 'https://www.myjudo.eu';
 			$deviceDataUrl = $url . '/interface/?token=' . $this->ReadAttributeString("AccessToken") . '&group=register&command=get%20device%20data';
@@ -283,12 +286,11 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 							break;
 						
 						default:
-							$sceneValue = -1;
+							$sceneValue = 0;
 							break;
 					}
 
-					if($sceneValue != -1)
-						$this->updateIfNecessary($sceneValue, "activeScene");
+					$this->updateIfNecessary($sceneValue, "activeScene");
 		
 
 
