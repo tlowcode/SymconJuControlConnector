@@ -13,7 +13,7 @@ Beschreibung des Moduls.
 
 ### 1. Funktionsumfang
 
-*
+* Stellt die Verbindung zur Judo i-soft safe Wasserenthärtungsanlage her. Die Verbindung läuft über die API des Hersteller (myjudo) mittels Benutzername und Passwort. Aktuell wird nur eine Anlage pro Nutzeraccount unterstützt. Bei mehreren eingerichteten Anlagen kann es zu Fehlfunktionen kommen.
 
 ### 2. Vorraussetzungen
 
@@ -31,10 +31,15 @@ Beschreibung des Moduls.
 
 __Konfigurationsseite__:
 
-Name     | Beschreibung
--------- | ------------------
-         |
-         |
+Name     		| Beschreibung
+-----------------------	| ------------------
+ Username        	|  Benutzername des myjudo-Accounts
+ Passwort      		|  zugehöriges Benutzerpasswort
+ Refreshrate		|  Aktualisierungsintervall
+ Time Shower		|  Wasserszenen Zeit Duschen
+ Time Heating		|  Wasserszenen Zeit Heizungsfüllung
+ Time Watering		|  Wasserszenen Zeit Bewässerung
+ Time Washing		|  Wasserszenen Zeit Waschen
 
 ### 5. Statusvariablen und Profile
 
@@ -42,10 +47,32 @@ Die Statusvariablen/Kategorien werden automatisch angelegt. Das Löschen einzeln
 
 #### Statusvariablen
 
-Name   | Typ     | Beschreibung
------- | ------- | ------------
-       |         |
-       |         |
+Name					| Typ     	| Beschreibung
+---------------------------------------	| ------------- | ------------
+ Geräte-ID				| String	|
+ Geräte-Typ				| String	|
+ Status					| String	|
+ Seriennummer				| String	|
+ Ziel-Wasserhärte			| Integer	|
+ Ist-Wasserhärte			| Float		|
+ Füllstand Salz				| Integer	|
+ Aktueller Durchfluss			| Integer	|
+ Batteriezustand Notstrommodul		| Integer	|
+ Aktive Wasserszene			| Integer	|
+ SW-Version				| String	|
+ HW-Version				| String	|	
+ CCU-Version				| String	|
+ Tage bis zur Wartung			| Integer	|
+ Notstrommodul verbaut			| String	|
+ Gesamt-Durchfluss			| Integer	|
+ Gesamt-Regenerationen			| Integer	|
+ Gesamt-Wartungen			| Integer	|
+ Szenen-Wasserhärte Waschen		| Integer	|
+ Szenen-Wasserhärte Heizung		| Integer	|
+ Szenen-Wasserhärte Bewässerung		| Integer	|
+ Szenen-Wasserhärte Duschen		| Integer	|
+ Restlaufzeit Szene			| Integer	|
+ Szenen-Wasserhärte Normal		| Integer	|
 
 #### Profile
 
