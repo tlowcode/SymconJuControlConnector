@@ -211,221 +211,225 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 		public function RefreshData()
 		{
 			try {
-
-			}
-			$wc = new WebClient();
-			$url = 'https://www.myjudo.eu';
-			$deviceDataUrl = $url . '/interface/?token=' . $this->ReadAttributeString("AccessToken") . '&group=register&command=get%20device%20data';
-			$response = $wc->Navigate($deviceDataUrl);
+				$wc = new WebClient();
+				$url = 'https://www.myjudo.eu';
+				$deviceDataUrl = $url . '/interface/?token=' . $this->ReadAttributeString("AccessToken") . '&group=register&command=get%20device%20data';
+				$response = $wc->Navigate($deviceDataUrl);
 	
-			if ($response === FALSE) {
+				if ($response === FALSE) {
 				//$this->SetStatus(104);
 				//$this->SetTimerInterval("RefreshTimer", 0);
 				$this->SendDebug('JuControlDevice:', 'Error during request to JuControl API: '. $deviceDataUrl, 0);
-			}
-			else {
-				$json = json_decode($response);
-				if(isset($json->status) && $json->status == 'ok')
-				{
-					/* Parse response */
-					$this->SetStatus(102);
-					if ($json->data[0]->data[0]->dt == '0x33')
+				}
+				else {
+					$json = json_decode($response);
+					if(isset($json->status) && $json->status == 'ok')
 					{
-						$this->updateIfNecessary('i-soft safe', "deviceType");
-					}
-					else
-					{
-						$this->SetStatus(104);
-						$this->SetStatus(202);
-						$this->SendDebug('JuControlDevice received data:', 'Wrong device type: (' . $json->data[0]->data[0]->dt . ') found -> Aborting!', 0);
-						$this->SetTimerInterval("RefreshTimer", 0);
-					}
-			
-					/* Device S/N */
-					$this->updateIfNecessary($json->data[0]->serialnumber, "deviceSN");
-			
-					/* Device state */
-					$this->updateIfNecessary($json->data[0]->status, "deviceState");
-
-					/* Connectivity module version */
-					$this->updateIfNecessary($json->data[0]->sv, "ccuVersion");
-
-					/* Emergency supply available */
-					$emergencySupply = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 2, 2));
-					if ($emergencySupply === 2 || $emergencySupply === 3)
-					{
-						$this->updateIfNecessary("Ja", "hasEmergencySupply");
-						/* Battery percentage */
-						$batteryPercentage = hexdec(substr($json->data[0]->data[0]->data->{93}->data, 6, 2));
-						$this->updateIfNecessary($batteryPercentage, "batteryState");
-					}
-					else{
-						$this->updateIfNecessary("Nein", "hasEmergencySupply");
-					}
-
-					
-					
-
-					/* Active scene */
-					$sceneValue = -1;
-					switch ($json->data[0]->waterscene) {
-						case 'normal':
-							$sceneValue = 0;
-							break;
-						case 'shower':
-							$sceneValue = 1;
-							break;
-						case 'heaterfilling':
-							$sceneValue = 2;
-							break;
-						case 'watering':
-							$sceneValue = 3;
-							break;
-						case 'washing':
-							$sceneValue = 4;
-							break;
-						
-						default:
-							$sceneValue = 0;
-							break;
-					}
-
-					$this->updateIfNecessary($sceneValue, "activeScene");
-		
-
-
-					/* HW Version */
-					$hwMinor = intval(explode('.', $json->data[0]->data[0]->hv, 2)[1], 10);
-					$hwMajor = explode('.', $json->data[0]->data[0]->hv, 2)[0];
-			  
-					if($hwMinor < 10)
-					{
-						$hwMinor = '0' . strval($hwMinor);
-					}
-					else
-					{
-						$hwMinor = strval($hwMinor);
-					}
-					$this->updateIfNecessary($hwMajor . '.' . $hwMinor, "hwVersion");
-			
-			
-					/* SW Version */
-					$swMinor = intval(explode('.', $json->data[0]->data[0]->sv, 2)[1], 10);
-					$swMajor = explode('.', $json->data[0]->data[0]->sv, 2)[0];
-			
-					if($swMinor < 10)
-					{
-						$swMinor = '0' . strval($swMinor);
-					}
-					else
-					{
-						$swMinor = strval($swMinor);
-					}
-					$this->updateIfNecessary($swMajor . '.' . $swMinor, "swVersion");
-			
-					/* Device ID */
-					$deviceIDhex = $this->formatEndian($json->data[0]->data[0]->data->{3}->data, 'N');
-					$this->updateIfNecessary(hexdec($deviceIDhex), "deviceID");
-
-					/* Total water*/
-					$totalWaterHex = $this->formatEndian($json->data[0]->data[0]->data->{8}->data, 'N');
-					$this->updateIfNecessary(hexdec($totalWaterHex), "totalWater");
-
-					/* Next service */
-					$hoursUntilNextService = hexdec($this->formatEndian(substr($json->data[0]->data[0]->data->{7}->data, 0, 4) . '0000', 'N'));
-					$daysUntilNextService = $hoursUntilNextService / 24;
-					$this->updateIfNecessary($daysUntilNextService, "nextService");
-
-					/* Count regenaration */
-					$countRegeneration = hexdec($this->formatEndian(substr(explode(':',$json->data[0]->data[0]->data->{791}->data)[1], 60, 4) . '0000', 'N'));
-					$this->updateIfNecessary($countRegeneration, "totalRegenaration");
-
-					/* Count service */
-					$countService = hexdec($this->formatEndian(substr($json->data[0]->data[0]->data->{7}->data, 8, 4) . '0000', 'N'));
-					$this->updateIfNecessary($countService, "totalService");
-
-					/* Range Salt */
-					$lowRangeSaltPercent = substr($json->data[0]->data[0]->data->{94}->data, 0, 2);
-					$highRangeSaltPercent = substr($json->data[0]->data[0]->data->{94}->data, 2, 2);
-					$rangeSaltPercent = 2 * (hexdec($highRangeSaltPercent . $lowRangeSaltPercent) / 1000);		
-					$this->updateIfNecessary(intval($rangeSaltPercent), "rangeSaltPercent");
-
-					/* Input hardness */
-					$inputHardness = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 52, 2));
-					$this->updateIfNecessary($inputHardness, "inputHardness");
-
-
-					/* currentFlow */
-					$lowCurrentFlow = substr(explode(':', $json->data[0]->data[0]->data->{790}->data)[1], 32, 2);
-					$highCurrentFlow = substr(explode(':', $json->data[0]->data[0]->data->{790}->data)[1], 34, 2);
-					$currentFlow = hexdec($highCurrentFlow . $lowCurrentFlow);
-					$this->updateIfNecessary($currentFlow, "currentFlow");
-
-					/* read target hardness of waterscenes */
-
-					$this->updateIfNecessary(intval($json->data[0]->hardness_washing), "Hardness_Washing");
-					$this->updateIfNecessary(intval($json->data[0]->hardness_shower), "Hardness_Shower");
-					$this->updateIfNecessary(intval($json->data[0]->hardness_watering), "Hardness_Watering");
-					$this->updateIfNecessary(intval($json->data[0]->hardness_heater), "Hardness_Heater");
-					$this->updateIfNecessary(intval($json->data[0]->waterscene_normal), "Hardness_Normal");
-
-					/* check waterscene and update target hardness */
-					switch (GetValue($this->GetIDForIdent("activeScene"))) {
-						case '4':
-							$this->updateIfNecessary(intval($json->data[0]->hardness_washing), "targetHardness");
-							break;
-						case '1':
-							$this->updateIfNecessary(intval($json->data[0]->hardness_shower), "targetHardness");
-							break;
-						case '3':
-							$this->updateIfNecessary(intval($json->data[0]->hardness_watering), "targetHardness");
-							break;
-						case '2':
-							$this->updateIfNecessary(intval($json->data[0]->hardness_heater), "targetHardness");
-							break;
-						case '0':
-							$targetHardness = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 16, 2));
-							$this->updateIfNecessary($targetHardness, "targetHardness");
-							break;							
-						default:
-							/* do not update */
-							break;
-					}
-
-					/* Remaining time of active water scene */
-					if(GetValue($this->GetIDForIdent("activeScene")) != 0)
-					{
-						if($json->data[0]->disable_time != '')
+						/* Parse response */
+						$this->SetStatus(102);
+						if ($json->data[0]->data[0]->dt == '0x33')
 						{
-							$remainingTime = (intval($json->data[0]->disable_time) - time()) / 60 ;
-							$this->updateIfNecessary(intval($remainingTime), "remainingTime");
-							if (intval($remainingTime) <= 0)
+							$this->updateIfNecessary('i-soft safe', "deviceType");
+						}
+						else
+						{
+							$this->SetStatus(104);
+							$this->SetStatus(202);
+							$this->SendDebug('JuControlDevice received data:', 'Wrong device type: (' . $json->data[0]->data[0]->dt . ') found -> Aborting!', 0);
+							$this->SetTimerInterval("RefreshTimer", 0);
+						}
+			
+						/* Device S/N */
+						$this->updateIfNecessary($json->data[0]->serialnumber, "deviceSN");
+				
+						/* Device state */
+						$this->updateIfNecessary($json->data[0]->status, "deviceState");
+
+						/* Connectivity module version */
+						$this->updateIfNecessary($json->data[0]->sv, "ccuVersion");
+
+						/* Emergency supply available */
+						$emergencySupply = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 2, 2));
+						if ($emergencySupply === 2 || $emergencySupply === 3)
+						{
+							$this->updateIfNecessary("Ja", "hasEmergencySupply");
+							/* Battery percentage */
+							$batteryPercentage = hexdec(substr($json->data[0]->data[0]->data->{93}->data, 6, 2));
+							$this->updateIfNecessary($batteryPercentage, "batteryState");
+						}
+						else{
+							$this->updateIfNecessary("Nein", "hasEmergencySupply");
+						}
+
+					
+					
+
+						/* Active scene */
+						$sceneValue = -1;
+						switch ($json->data[0]->waterscene) {
+							case 'normal':
+								$sceneValue = 0;
+								break;
+							case 'shower':
+								$sceneValue = 1;
+								break;
+							case 'heaterfilling':
+								$sceneValue = 2;
+								break;
+							case 'watering':
+								$sceneValue = 3;
+								break;
+							case 'washing':
+								$sceneValue = 4;
+								break;
+							
+							default:
+								$sceneValue = 0;
+								break;
+						}
+
+						$this->updateIfNecessary($sceneValue, "activeScene");
+			
+
+
+						/* HW Version */
+						$hwMinor = intval(explode('.', $json->data[0]->data[0]->hv, 2)[1], 10);
+						$hwMajor = explode('.', $json->data[0]->data[0]->hv, 2)[0];
+				
+						if($hwMinor < 10)
+						{
+							$hwMinor = '0' . strval($hwMinor);
+						}
+						else
+						{
+							$hwMinor = strval($hwMinor);
+						}
+						$this->updateIfNecessary($hwMajor . '.' . $hwMinor, "hwVersion");
+				
+				
+						/* SW Version */
+						$swMinor = intval(explode('.', $json->data[0]->data[0]->sv, 2)[1], 10);
+						$swMajor = explode('.', $json->data[0]->data[0]->sv, 2)[0];
+				
+						if($swMinor < 10)
+						{
+							$swMinor = '0' . strval($swMinor);
+						}
+						else
+						{
+							$swMinor = strval($swMinor);
+						}
+						$this->updateIfNecessary($swMajor . '.' . $swMinor, "swVersion");
+				
+						/* Device ID */
+						$deviceIDhex = $this->formatEndian($json->data[0]->data[0]->data->{3}->data, 'N');
+						$this->updateIfNecessary(hexdec($deviceIDhex), "deviceID");
+
+						/* Total water*/
+						$totalWaterHex = $this->formatEndian($json->data[0]->data[0]->data->{8}->data, 'N');
+						$this->updateIfNecessary(hexdec($totalWaterHex), "totalWater");
+
+						/* Next service */
+						$hoursUntilNextService = hexdec($this->formatEndian(substr($json->data[0]->data[0]->data->{7}->data, 0, 4) . '0000', 'N'));
+						$daysUntilNextService = $hoursUntilNextService / 24;
+						$this->updateIfNecessary($daysUntilNextService, "nextService");
+
+						/* Count regenaration */
+						$countRegeneration = hexdec($this->formatEndian(substr(explode(':',$json->data[0]->data[0]->data->{791}->data)[1], 60, 4) . '0000', 'N'));
+						$this->updateIfNecessary($countRegeneration, "totalRegenaration");
+
+						/* Count service */
+						$countService = hexdec($this->formatEndian(substr($json->data[0]->data[0]->data->{7}->data, 8, 4) . '0000', 'N'));
+						$this->updateIfNecessary($countService, "totalService");
+
+						/* Range Salt */
+						$lowRangeSaltPercent = substr($json->data[0]->data[0]->data->{94}->data, 0, 2);
+						$highRangeSaltPercent = substr($json->data[0]->data[0]->data->{94}->data, 2, 2);
+						$rangeSaltPercent = 2 * (hexdec($highRangeSaltPercent . $lowRangeSaltPercent) / 1000);		
+						$this->updateIfNecessary(intval($rangeSaltPercent), "rangeSaltPercent");
+
+						/* Input hardness */
+						$inputHardness = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 52, 2));
+						$this->updateIfNecessary($inputHardness, "inputHardness");
+
+
+						/* currentFlow */
+						$lowCurrentFlow = substr(explode(':', $json->data[0]->data[0]->data->{790}->data)[1], 32, 2);
+						$highCurrentFlow = substr(explode(':', $json->data[0]->data[0]->data->{790}->data)[1], 34, 2);
+						$currentFlow = hexdec($highCurrentFlow . $lowCurrentFlow);
+						$this->updateIfNecessary($currentFlow, "currentFlow");
+
+						/* read target hardness of waterscenes */
+
+						$this->updateIfNecessary(intval($json->data[0]->hardness_washing), "Hardness_Washing");
+						$this->updateIfNecessary(intval($json->data[0]->hardness_shower), "Hardness_Shower");
+						$this->updateIfNecessary(intval($json->data[0]->hardness_watering), "Hardness_Watering");
+						$this->updateIfNecessary(intval($json->data[0]->hardness_heater), "Hardness_Heater");
+						$this->updateIfNecessary(intval($json->data[0]->waterscene_normal), "Hardness_Normal");
+
+						/* check waterscene and update target hardness */
+						switch (GetValue($this->GetIDForIdent("activeScene"))) {
+							case '4':
+								$this->updateIfNecessary(intval($json->data[0]->hardness_washing), "targetHardness");
+								break;
+							case '1':
+								$this->updateIfNecessary(intval($json->data[0]->hardness_shower), "targetHardness");
+								break;
+							case '3':
+								$this->updateIfNecessary(intval($json->data[0]->hardness_watering), "targetHardness");
+								break;
+							case '2':
+								$this->updateIfNecessary(intval($json->data[0]->hardness_heater), "targetHardness");
+								break;
+							case '0':
+								$targetHardness = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 16, 2));
+								$this->updateIfNecessary($targetHardness, "targetHardness");
+								break;							
+							default:
+								/* do not update */
+								break;
+						}
+
+						/* Remaining time of active water scene */
+						if(GetValue($this->GetIDForIdent("activeScene")) != 0)
+						{
+							if($json->data[0]->disable_time != '')
+							{
+								$remainingTime = (intval($json->data[0]->disable_time) - time()) / 60 ;
+								$this->updateIfNecessary(intval($remainingTime), "remainingTime");
+								if (intval($remainingTime) <= 0)
+								{
+									$this->updateIfNecessary(0, "remainingTime");
+								}
+							}
+							else
 							{
 								$this->updateIfNecessary(0, "remainingTime");
+								$this->updateIfNecessary(0, "activeScene");
 							}
+
 						}
 						else
 						{
 							$this->updateIfNecessary(0, "remainingTime");
-							$this->updateIfNecessary(0, "activeScene");
 						}
+						
+
 
 					}
 					else
 					{
-						$this->updateIfNecessary(0, "remainingTime");
+						/* Token not valid -> try to login again one time and wait for next RefreshData! */
+						$this->Login();
 					}
 					
-
-
 				}
-				else
-				{
-					/* Token not valid -> try to login again one time and wait for next RefreshData! */
-					$this->Login();
-				}
-				
 			}
+			catch(Exception $e){
+				$this->SendDebug('JuControlDevice:', 'Error during data crawling: '. $e->getMessage(), 0);
+			}
+
+			
 		
 			//$this->Send('GET', $loginUrl, '', 5000);
 
