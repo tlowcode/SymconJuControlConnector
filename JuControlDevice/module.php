@@ -72,7 +72,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			$this->RegisterProfileInteger("JCD.Liter", "Wave", "", " Liter", 0, 99999999, 1);
 			$this->RegisterVariableInteger("totalWater", "Gesamt-Durchfluss", "JCD.Liter", 15);
 
-			$this->RegisterVariableString("totalRegenaration", "Gesamt-Regenerationen", "", 16);
+			$this->RegisterVariableString("totalRegeneration", "Gesamt-Regenerationen", "", 16);
 			$this->RegisterVariableString("totalService", "Gesamt-Wartungen", "", 17);
 
 			$this->RegisterVariableInteger("Hardness_Washing", "Szenen-Wasserhärte Waschen", "JCD.dH_int", 18);
@@ -93,14 +93,8 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			$this->RegisterProfileInteger("JCD.Minutes", "Clock", "", " Minuten", 0, 1000, 1);
 			$this->RegisterVariableInteger("remainingTime", "Restlaufzeit Szene", "JCD.Minutes", 23);
 
-			$this->SetStatus(104);
+			$this->SetStatus(IS_INACTIVE);
 
-		}
-
-		public function Destroy()
-		{
-			//Never delete this line!
-			parent::Destroy();
 		}
 
 		public function ApplyChanges()
@@ -121,54 +115,54 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			switch($Ident) {
 				case "Hardness_Washing":
 					$command = "set%20waterscene%20washing";
-					$parameter = strval($Value);
+					$parameter = (string) $Value;
 					break;
 				case "Hardness_Heater":
 					$command = "set%20waterscene%20heaterfilling";
-					$parameter = strval($Value);
+					$parameter = (string) $Value;
 					break;
 				case "Hardness_Watering":
 					$command = "set%20waterscene%20watering";
-					$parameter = strval($Value);
+					$parameter = (string) $Value;
 					break;
 				case "Hardness_Shower":
 					$command = "set%20waterscene%20shower";
-					$parameter = strval($Value);
+					$parameter = (string) $Value;
 					break;
 				case "Hardness_Normal":
-					$command = "write%20data&dt=0x33&index=60&data=". strval($Value) . "&da=0x1&&action=normal";
+					$command = "write%20data&dt=0x33&index=60&data=". $Value . "&da=0x1&&action=normal";
 					$parameter = 0;
 					break;
 				case "activeScene":
 					switch ($Value) {
 						case 0:
 							$action = "normal";
-							$hardness = GetValue($this->GetIDForIdent("Hardness_Normal"));
-							$command = "write%20data&dt=0x33&index=201&data=". strval($hardness) . "&da=0x1&disable_time=" ."&action=" . $action;
+							$hardness = $this->GetValue('Hardness_Normal');
+							$command = "write%20data&dt=0x33&index=201&data=" . $hardness . "&da=0x1&disable_time=" . "&action=" . $action;
 							break;
 						case 1:
 							$action = "shower";
 							$time = $this->ReadPropertyInteger("TimeShower");
-							$hardness = GetValue($this->GetIDForIdent("Hardness_Shower"));
-							$command = "write%20data&dt=0x33&index=202&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + $time*60) ."&action=" . $action;
+							$hardness = $this->GetValue('Hardness_Shower');
+							$command = "write%20data&dt=0x33&index=202&data=" . $hardness . "&da=0x1&disable_time=". (time() + $time*60) . "&action=" . $action;
 							break;
 						case 2:
 							$action = "heaterfilling";
 							$time = $this->ReadPropertyInteger("TimeHeating");
-							$hardness = GetValue($this->GetIDForIdent("Hardness_Heater"));
-							$command = "write%20data&dt=0x33&index=204&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + $time*60) ."&action=" . $action;
+                            $hardness = $this->GetValue('Hardness_Heater');
+							$command = "write%20data&dt=0x33&index=204&data=" . $hardness . "&da=0x1&disable_time=". (time() + $time*60) . "&action=" . $action;
 							break;
 						case 3:
 							$action = "watering";
 							$time = $this->ReadPropertyInteger("TimeWatering");
-							$hardness = GetValue($this->GetIDForIdent("Hardness_Watering"));
-							$command = "write%20data&dt=0x33&index=203&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + $time*60) ."&action=" . $action;
+                            $hardness = $this->GetValue('Hardness_Watering');
+							$command = "write%20data&dt=0x33&index=203&data=" . $hardness . "&da=0x1&disable_time=". (time() + $time*60) . "&action=" . $action;
 							break;
 						case 4:
 							$action = "washing";
 							$time = $this->ReadPropertyInteger("TimeWashing");
-							$hardness = GetValue($this->GetIDForIdent("Hardness_Washing"));
-							$command = "write%20data&dt=0x33&index=205&data=". strval($hardness) . "&da=0x1&disable_time=". strval(time() + $time*60) ."&action=" . $action;
+                            $hardness =  $this->GetValue('Hardness_Washing');
+							$command = "write%20data&dt=0x33&index=205&data=" . $hardness . "&da=0x1&disable_time=". (time() + $time*60) . "&action=" . $action;
 							break;
 						
 						default:
@@ -182,21 +176,21 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 					throw new Exception("Invalid Ident");
 			}
 
-			if($command != "none"){
+			if($command !== 'none'){
 				$deviceCommandUrl = $url 
 				. '/interface/?token=' . $this->ReadAttributeString("AccessToken") 
-				. $strSerialnumber . GetValue($this->GetIDForIdent("deviceSN"))
+				. $strSerialnumber . $this->GetValue('deviceSN')
 				. '&group=register&command=' 
 				. $command . '&parameter=' . $parameter;
 
 				$this->SendDebug('JuControlDevice:', 'Requesting API URL '. $deviceCommandUrl, 0);
 				$response = $wc->Navigate($deviceCommandUrl);
-				$json = json_decode($response);
+				$json = json_decode($response, false);
 				$this->SendDebug('JuControlDevice:', 'Received response from API: '. $response, 0);
 
-				if(isset($json->status) && $json->status == 'ok')
+				if(isset($json->status) && $json->status === 'ok')
 				{
-					SetValue($this->GetIDForIdent($Ident), $Value);
+					$this->SetValue($Ident, $Value);
 				}
 				else{
 					$this->SendDebug('JuControlDevice:', 'Error during request to JuControl API, ', 0);
@@ -217,23 +211,26 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 				$response = $wc->Navigate($deviceDataUrl);
 	
 				if ($response === FALSE) {
-				//$this->SetStatus(104);
-				//$this->SetTimerInterval("RefreshTimer", 0);
-				$this->SendDebug('JuControlDevice:', 'Error during request to JuControl API: '. $deviceDataUrl, 0);
+				    //$this->SetStatus(104);
+				    //$this->SetTimerInterval("RefreshTimer", 0);
+				    $this->SendDebug('JuControlDevice:', 'Error during request to JuControl API: '. $deviceDataUrl, 0);
 				}
 				else {
-					$json = json_decode($response);
-					if(isset($json->status) && $json->status == 'ok')
+					$json = json_decode($response, false);
+					if (isset($json->status) && $json->status === 'ok')
 					{
+                        $this->SendDebug('JuControlDevice:get_device_data', $response, 0);
+                        //print_r(json_decode($response, true));
 						/* Parse response */
-						$this->SetStatus(102);
-						if ($json->data[0]->data[0]->dt == '0x33')
+						$this->SetStatus(IS_ACTIVE);
+
+                        /* Device Type */
+                        if ($json->data[0]->data[0]->dt === '0x33')
 						{
 							$this->updateIfNecessary('i-soft safe', "deviceType");
 						}
 						else
 						{
-							$this->SetStatus(104);
 							$this->SetStatus(202);
 							$this->SendDebug('JuControlDevice received data:', 'Wrong device type: (' . $json->data[0]->data[0]->dt . ') found -> Aborting!', 0);
 							$this->SetTimerInterval("RefreshTimer", 0);
@@ -261,15 +258,9 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 							$this->updateIfNecessary("Nein", "hasEmergencySupply");
 						}
 
-					
-					
 
 						/* Active scene */
-						$sceneValue = -1;
 						switch ($json->data[0]->waterscene) {
-							case 'normal':
-								$sceneValue = 0;
-								break;
 							case 'shower':
 								$sceneValue = 1;
 								break;
@@ -290,33 +281,32 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 						$this->updateIfNecessary($sceneValue, "activeScene");
 			
 
-
 						/* HW Version */
-						$hwMinor = intval(explode('.', $json->data[0]->data[0]->hv, 2)[1], 10);
+						$hwMinor = (int) explode('.', $json->data[0]->data[0]->hv, 2)[1];
 						$hwMajor = explode('.', $json->data[0]->data[0]->hv, 2)[0];
 				
-						if($hwMinor < 10)
+						if ($hwMinor < 10)
 						{
-							$hwMinor = '0' . strval($hwMinor);
+							$hwMinor = '0' . $hwMinor;
 						}
 						else
 						{
-							$hwMinor = strval($hwMinor);
+							$hwMinor = (string) $hwMinor;
 						}
 						$this->updateIfNecessary($hwMajor . '.' . $hwMinor, "hwVersion");
 				
 				
 						/* SW Version */
-						$swMinor = intval(explode('.', $json->data[0]->data[0]->sv, 2)[1], 10);
+						$swMinor = (int)explode('.', $json->data[0]->data[0]->sv, 2)[1];
 						$swMajor = explode('.', $json->data[0]->data[0]->sv, 2)[0];
 				
-						if($swMinor < 10)
+						if ($swMinor < 10)
 						{
-							$swMinor = '0' . strval($swMinor);
+							$swMinor = '0' . $swMinor;
 						}
 						else
 						{
-							$swMinor = strval($swMinor);
+							$swMinor = (string) $swMinor;
 						}
 						$this->updateIfNecessary($swMajor . '.' . $swMinor, "swVersion");
 				
@@ -333,9 +323,9 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 						$daysUntilNextService = $hoursUntilNextService / 24;
 						$this->updateIfNecessary($daysUntilNextService, "nextService");
 
-						/* Count regenaration */
+						/* Count regeneration */
 						$countRegeneration = hexdec($this->formatEndian(substr(explode(':',$json->data[0]->data[0]->data->{791}->data)[1], 60, 4) . '0000', 'N'));
-						$this->updateIfNecessary($countRegeneration, "totalRegenaration");
+						$this->updateIfNecessary($countRegeneration, "totalRegeneration");
 
 						/* Count service */
 						$countService = hexdec($this->formatEndian(substr($json->data[0]->data[0]->data->{7}->data, 8, 4) . '0000', 'N'));
@@ -345,7 +335,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 						$lowRangeSaltPercent = substr($json->data[0]->data[0]->data->{94}->data, 0, 2);
 						$highRangeSaltPercent = substr($json->data[0]->data[0]->data->{94}->data, 2, 2);
 						$rangeSaltPercent = 2 * (hexdec($highRangeSaltPercent . $lowRangeSaltPercent) / 1000);		
-						$this->updateIfNecessary(intval($rangeSaltPercent), "rangeSaltPercent");
+						$this->updateIfNecessary((int) $rangeSaltPercent, "rangeSaltPercent");
 
 						/* Input hardness */
 						$inputHardness = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 52, 2));
@@ -360,25 +350,25 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 
 						/* read target hardness of waterscenes */
 
-						$this->updateIfNecessary(intval($json->data[0]->hardness_washing), "Hardness_Washing");
-						$this->updateIfNecessary(intval($json->data[0]->hardness_shower), "Hardness_Shower");
-						$this->updateIfNecessary(intval($json->data[0]->hardness_watering), "Hardness_Watering");
-						$this->updateIfNecessary(intval($json->data[0]->hardness_heater), "Hardness_Heater");
-						$this->updateIfNecessary(intval($json->data[0]->waterscene_normal), "Hardness_Normal");
+						$this->updateIfNecessary((int) $json->data[0]->hardness_washing, "Hardness_Washing");
+						$this->updateIfNecessary((int) $json->data[0]->hardness_shower, "Hardness_Shower");
+						$this->updateIfNecessary((int) $json->data[0]->hardness_watering, "Hardness_Watering");
+						$this->updateIfNecessary((int) $json->data[0]->hardness_heater, "Hardness_Heater");
+						$this->updateIfNecessary((int) $json->data[0]->waterscene_normal, "Hardness_Normal");
 
 						/* check waterscene and update target hardness */
-						switch (GetValue($this->GetIDForIdent("activeScene"))) {
+						switch ($this->GetValue('activeScene')) {
 							case '4':
-								$this->updateIfNecessary(intval($json->data[0]->hardness_washing), "targetHardness");
+								$this->updateIfNecessary((int) $json->data[0]->hardness_washing, "targetHardness");
 								break;
 							case '1':
-								$this->updateIfNecessary(intval($json->data[0]->hardness_shower), "targetHardness");
+								$this->updateIfNecessary((int) $json->data[0]->hardness_shower, "targetHardness");
 								break;
 							case '3':
-								$this->updateIfNecessary(intval($json->data[0]->hardness_watering), "targetHardness");
+								$this->updateIfNecessary((int) $json->data[0]->hardness_watering, "targetHardness");
 								break;
 							case '2':
-								$this->updateIfNecessary(intval($json->data[0]->hardness_heater), "targetHardness");
+								$this->updateIfNecessary((int) $json->data[0]->hardness_heater, "targetHardness");
 								break;
 							case '0':
 								$targetHardness = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 16, 2));
@@ -390,13 +380,13 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 						}
 
 						/* Remaining time of active water scene */
-						if(GetValue($this->GetIDForIdent("activeScene")) != 0)
+						if($this->GetValue('activeScene') != 0)
 						{
-							if($json->data[0]->disable_time != '')
+							if($json->data[0]->disable_time !== '')
 							{
-								$remainingTime = ((intval($json->data[0]->disable_time) - time()) / 60) +1;
-								$this->updateIfNecessary(intval($remainingTime), "remainingTime");
-								if (intval($remainingTime) <= 0)
+								$remainingTime = (((int)$json->data[0]->disable_time - time()) / 60) + 1;
+								$this->updateIfNecessary((int) $remainingTime, "remainingTime");
+								if ((int) $remainingTime <= 0)
 								{
 									$this->updateIfNecessary(0, "remainingTime");
 								}
@@ -418,7 +408,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 					}
 					else
 					{
-						/* Token not valid -> try to login again one time and wait for next RefreshData! */
+						/* Token not valid -> try to log in again one time and wait for next RefreshData! */
 						$this->Login();
 					}
 					
@@ -455,12 +445,12 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			}
 			else 
 			{
-				$json = json_decode($response);
-				if (isset($json->status) && $json->status == 'ok')
+				$json = json_decode($response, false);
+				if (isset($json->status) && $json->status === 'ok')
 				{
 					$this->SendDebug('JuControlDevice:', 'Login successful, Token: '. $json->token, 0);
 					$this->WriteAttributeString("AccessToken", $json->token);
-					$this->SetStatus(102);
+					$this->SetStatus(IS_ACTIVE);
 					
 					$refreshRate = $this->ReadPropertyInteger("RefreshRate");
 					$this->SetTimerInterval("RefreshTimer", $refreshRate * 1000);
@@ -480,7 +470,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			$this->Login();
 		}
 
-		function formatEndian($endian, $format = 'N') {
+		private function formatEndian($endian, $format = 'N'): string {
 			$endian = intval($endian, 16);      // convert string to hex
 			$endian = pack('L', $endian);       // pack hex to binary sting (unsinged long, machine byte order)
 			$endian = unpack($format, $endian); // convert binary sting to specified endian format
@@ -492,12 +482,12 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 		{
 				if (!IPS_VariableProfileExists($Name))
 				{
-					IPS_CreateVariableProfile($Name, 1);
+					IPS_CreateVariableProfile($Name, VARIABLETYPE_INTEGER);
 				}
 				else
 				{
 					$profile = IPS_GetVariableProfile($Name);
-					if ($profile['ProfileType'] != 1)
+					if ($profile['ProfileType'] !== VARIABLETYPE_INTEGER)
 						throw new Exception("Variable profile type does not match for profile " . $Name);
 				}
 				IPS_SetVariableProfileIcon($Name, $Icon);
@@ -509,12 +499,12 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 		{
 				if (!IPS_VariableProfileExists($Name))
 				{
-					IPS_CreateVariableProfile($Name, 2);
+					IPS_CreateVariableProfile($Name, VARIABLETYPE_FLOAT);
 				}
 				else
 				{
 					$profile = IPS_GetVariableProfile($Name);
-					if ($profile['ProfileType'] != 2)
+					if ($profile['ProfileType'] !== VARIABLETYPE_FLOAT)
 						throw new Exception("Variable profile type does not match for profile " . $Name);
 				}
 				IPS_SetVariableProfileIcon($Name, $Icon);
@@ -522,14 +512,12 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 				IPS_SetVariableProfileValues($Name, $MinValue, $MaxValue, $StepSize);        
 		}
 
-		private function updateIfNecessary($newValue, $ident)
+		private function updateIfNecessary($newValue, string $ident): void
 		{
-			$id = $this->GetIDForIdent($ident);
-			if(GetValue($id) != $newValue)
+			if ($this->GetValue($ident) !== $newValue)
 			{
-				SetValue($id, $newValue);
-				$this->SendDebug('JuControlDevice:', 'Updating variable ' . IPS_GetName($id) . ' to value: ' . $newValue, 0);
+                $this->SetValue($ident, $newValue);
+				$this->SendDebug('JuControlDevice:', 'Updating variable ' . $ident . ' to value: ' . $newValue, 0);
 			}
-				
 		}
 	}
