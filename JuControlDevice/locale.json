@@ -3,7 +3,7 @@
         "de": {
             "Username": "Benutzername",
             "Password": "Passwort",
-            "Refresh Rate": "Aktualisierungs-Intervall",
+            "Refresh Rate in Seconds": "Aktualisierungsintervall in Sekunden",
             "Water scene 'Shower' duration": "Laufzeit Wasserszene 'Duschen'",
             "Water scene 'Heating' duration": "Laufzeit Wasserszene 'Heizung'",
             "Water scene 'Watering' duration": "Laufzeit Wasserszene 'Bewässerung'",
