@@ -218,7 +218,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 					if (isset($json->status) && $json->status === 'ok')
 					{
                         $this->SendDebug(__FUNCTION__, 'get_device_data: ' . $response, 0);
-                        //print_r(json_decode($response, true));
+                        //var_dump(json_decode($response, true));
 						/* Parse response */
 						$this->SetStatus(IS_ACTIVE);
 
@@ -283,7 +283,6 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 								$sceneValue = 0;
 								break;
 						}
-
 						$this->updateIfNecessary($sceneValue, "activeScene");
 			
 
@@ -367,6 +366,22 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 						$this->updateIfNecessary((int) $json->data[0]->hardness_watering, "Hardness_Watering");
 						$this->updateIfNecessary((int) $json->data[0]->hardness_heater, "Hardness_Heater");
 						$this->updateIfNecessary((int) $json->data[0]->waterscene_normal, "Hardness_Normal");
+
+                        /* read times of waterscenes */
+                        if (isset($json->data[0]->waterscene_time)){
+                            $this->SendDebug(__FUNCTION__, 'TODO: waterscene_time (Stunden) = ' . $json->data[0]->waterscene_time, 0);
+                        }
+                        if (isset($json->data[0]->waterscene_time_garden)){
+                            $this->SendDebug(__FUNCTION__, 'TODO: waterscene_time_garden (Stunden) = ' . $json->data[0]->waterscene_time_garden, 0);
+                        }
+                        if (isset($json->data[0]->waterscene_time_heater)){
+                            $this->SendDebug(__FUNCTION__, 'TODO: waterscene_time_heater (Stunden) = ' . $json->data[0]->waterscene_time_heater, 0);
+                        }
+                        if (isset($json->data[0]->waterscene_time_washing)){
+                            $this->SendDebug(__FUNCTION__, 'TODO: waterscene_time_washing (Stunden) = ' . $json->data[0]->waterscene_time_washing, 0);
+                        }
+
+
 
 						/* read target hardness */
                         $targetHardness = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 16, 2));

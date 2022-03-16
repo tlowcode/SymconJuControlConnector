@@ -4,7 +4,6 @@ class WebClient
 {
     private $ch;
     private $cookie = '';
-    private $html;
 
     public function Navigate($url, $post = array()) 
     {
@@ -42,31 +41,31 @@ class WebClient
         curl_setopt($this->ch, CURLINFO_HEADER_OUT, TRUE);
         curl_setopt($this->ch, CURLOPT_HEADER, TRUE);
         curl_setopt($this->ch, CURLOPT_AUTOREFERER, TRUE);
+        curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, TRUE);
     }
 
-    private function exec() 
+    private function exec(): array
     {
         $headers = array();
         $html = '';
+        $separator = "\r\n\r\n";
 
-        ob_start();
-        curl_exec($this->ch);
-        $output = ob_get_contents();
-        ob_end_clean(); 
+        $output = curl_exec($this->ch);
 
         $retcode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
 
-        if ($retcode == 200) {
-            $separator = strpos($output, "\r\n\r\n");
+        if ($retcode === 200) {
 
-            $html = substr($output, $separator);
+            $separatorpos = strpos($output, $separator);
 
-            $h = trim(substr($output,0,$separator));
+            $html = substr($output, $separatorpos + strlen($separator));
+
+            $h = trim(substr($output,0,$separatorpos));
             $lines = explode("\n", $h);
             foreach($lines as $line) {
                 $kv = explode(':',$line);
 
-                if (count($kv) == 2) {
+                if (count($kv) === 2) {
                     $k = trim($kv[0]);
                     $v = trim($kv[1]);
                     $headers[$k] = $v;
@@ -77,8 +76,6 @@ class WebClient
         // TODO: it would deserve to be tested extensively.
         if (!empty($headers['Set-Cookie']))
             $this->cookie = $headers['Set-Cookie'];
-
-        $this->html = $html;
 
         return array('Code' => $retcode, 'Headers' => $headers, 'Html' => $html);
     }
