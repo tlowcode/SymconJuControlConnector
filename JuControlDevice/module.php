@@ -215,16 +215,17 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 				}
 				else {
 					$json = json_decode($response, false);
-					if (isset($json->status) && $json->status === 'ok')
+
+                    if (isset($json->status) && $json->status === 'ok')
 					{
                         $this->SendDebug(__FUNCTION__, 'get_device_data: ' . $response, 0);
-                        //var_dump(json_decode($response, true));
+
 						/* Parse response */
-						$this->SetStatus(IS_ACTIVE);
 
                         /* Device Type */
                         if ($json->data[0]->data[0]->dt === '0x33')
 						{
+                            $this->SetStatus(IS_ACTIVE);
 							$this->updateIfNecessary('i-soft safe', "deviceType");
 						}
 						else
@@ -243,27 +244,37 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 						/* Connectivity module version */
 						$this->updateIfNecessary($json->data[0]->sv, "ccuVersion");
 
+
+                        $deviceData = json_decode($response, true)['data'][0]['data'][0]['data'];
+
 						/* Emergency supply available */
-						$emergencySupply = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 2, 2));
-                        if (in_array($emergencySupply, [2, 3, 99], true))
-						{
+						$emergencyModuleData = $this->getInValue($deviceData, 790, 2);
+                        if (strlen($emergencyModuleData) > 1) {
+                            $emergencySupplyAvailable = (boolean) $emergencyModuleData[strlen($emergencyModuleData) - 2];
+                        } else {
+                            $emergencySupplyAvailable = false;
+                        }
+
+                        if ($emergencySupplyAvailable) {
 							$this->updateIfNecessary("Ja", "hasEmergencySupply");
 
-                            $data93 = $json->data[0]->data[0]->data->{93}->data;
+                            $batteryValues = explode(':', $this->getInValue($deviceData, 93));
 
                             /* Battery percentage */
-							$batteryPercentage = hexdec(substr($data93, 6, 2));
-							$this->updateIfNecessary($batteryPercentage, "batteryState");
+							if (isset($batteryValues[0])){
+                                $this->updateIfNecessary((int) $batteryValues[0], "batteryState");
+                            }
 
                             /* Battery runtime */
-                            $batteryRuntime = sprintf('%d:%02d:%02d', hexdec(substr($data93, 14, 2)), hexdec(substr($data93, 12, 2)),  hexdec(substr($data93, 10, 2)));
-                            $this->SendDebug(__FUNCTION__, 'TODO: BatteryRuntime (HH:MM:SS) = ' . $batteryRuntime, 0);
+                            if (count($batteryValues) > 1){
+                                $batteryRuntime = sprintf('%d:%02d:%02d', (int) $batteryValues[3], (int) $batteryValues[2],  (int) $batteryValues[1]);
+                                $this->SendDebug(__FUNCTION__, 'TODO: BatteryRuntime (H:MM:SS) = ' . $batteryRuntime, 0);
+                            }
 
                         }
 						else{
 							$this->updateIfNecessary("Nein", "hasEmergencySupply");
 						}
-
 
 						/* Active scene */
 						switch ($json->data[0]->waterscene) {
@@ -286,81 +297,53 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 						$this->updateIfNecessary($sceneValue, "activeScene");
 			
 
-						/* HW Version */
-						$hwMinor = (int) explode('.', $json->data[0]->data[0]->hv, 2)[1];
-						$hwMajor = explode('.', $json->data[0]->data[0]->hv, 2)[0];
-				
-						if ($hwMinor < 10)
-						{
-							$hwMinor = '0' . $hwMinor;
-						}
-						else
-						{
-							$hwMinor = (string) $hwMinor;
-						}
-						$this->updateIfNecessary($hwMajor . '.' . $hwMinor, "hwVersion");
-				
-				
 						/* SW Version */
-						$swMinor = (int)explode('.', $json->data[0]->data[0]->sv, 2)[1];
-						$swMajor = explode('.', $json->data[0]->data[0]->sv, 2)[0];
-				
-						if ($swMinor < 10)
-						{
-							$swMinor = '0' . $swMinor;
-						}
-						else
-						{
-							$swMinor = (string) $swMinor;
-						}
-						$this->updateIfNecessary($swMajor . '.' . $swMinor, "swVersion");
-				
-						/* Device ID */
-						$deviceIDhex = $this->formatEndian($json->data[0]->data[0]->data->{3}->data, 'N');
-						$this->updateIfNecessary(hexdec($deviceIDhex), "deviceID");
+						$this->updateIfNecessary($this->getInValue($deviceData, 1), "swVersion");
 
-						/* Total water*/
-						$totalWaterHex = $this->formatEndian($json->data[0]->data[0]->data->{8}->data, 'N');
-						$this->updateIfNecessary(hexdec($totalWaterHex), "totalWater");
+                        /* HW Version */
+                        $this->updateIfNecessary($this->getInValue($deviceData, 2) , "hwVersion");
 
-						/* Next service */
-						$hoursUntilNextService = hexdec($this->formatEndian(substr($json->data[0]->data[0]->data->{7}->data, 0, 4) . '0000', 'N'));
-						$daysUntilNextService = (int) ($hoursUntilNextService / 24);
-						$this->updateIfNecessary($daysUntilNextService, "nextService");
+                        /* Device ID */
+                        $this->updateIfNecessary($this->getInValue($deviceData, 3), "deviceID");
+
+                        /* Service Info*/
+                        $infoService = explode (':', $this->getInValue($deviceData, 7));
+                        $this->updateIfNecessary((int) $infoService[0], "nextService");
+                        $this->updateIfNecessary((int) $infoService[1], "totalService");
+
+                        /* Total water*/
+						$this->updateIfNecessary($this->getInValue($deviceData, 8), "totalWater");
 
 						/* Count regeneration */
-						$countRegeneration = hexdec($this->formatEndian(substr(explode(':',$json->data[0]->data[0]->data->{791}->data)[1], 60, 4) . '0000', 'N'));
-						$this->updateIfNecessary($countRegeneration, "totalRegeneration");
+                        $this->updateIfNecessary($this->getInValue($deviceData, 791, 3031), "totalRegeneration");
 
-						/* Count service */
-						$countService = hexdec($this->formatEndian(substr($json->data[0]->data[0]->data->{7}->data, 8, 4) . '0000', 'N'));
-						$this->updateIfNecessary($countService, "totalService");
+						/* Salt Info*/
+						$saltInfo = explode(':', $this->getInValue($deviceData, 94));
 
-						/* Salt Level*/
-						$lowSaltLevel = substr($json->data[0]->data[0]->data->{94}->data, 0, 2);
-						$highSaltLevel = substr($json->data[0]->data[0]->data->{94}->data, 2, 2);
-						$SaltLevel = hexdec($highSaltLevel . $lowSaltLevel) / 1000; //kg
+						$SaltLevel = $saltInfo[0] / 1000; //Salzgewicht in kg
 						$SaltLevelPercent = (int) (2 * $SaltLevel);
 						$this->updateIfNecessary((int) $SaltLevelPercent, "rangeSaltPercent");
                         $this->SendDebug(__FUNCTION__, 'TODO: Salt Level (kg) = ' . $SaltLevel, 0);
 
-                        /* Salt Range*/
-                        $lowSaltRange = substr($json->data[0]->data[0]->data->{94}->data, 4, 2);
-                        $highSaltRange = substr($json->data[0]->data[0]->data->{94}->data, 6, 2);
-                        $SaltRange = hexdec($highSaltRange . $lowSaltRange);
+                        $SaltRange = $saltInfo[1]; //Salzreichweite in Tagen
                         $this->SendDebug(__FUNCTION__, 'TODO: Salt Range (days) = ' . $SaltRange, 0);
 
                         /* Input hardness */
-						$inputHardness = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 52, 2));
-						$this->updateIfNecessary($inputHardness, "inputHardness");
+						$this->updateIfNecessary($this->getInValue($deviceData, 790, 26), "inputHardness");
 
 						/* currentFlow */
-						$lowCurrentFlow = substr(explode(':', $json->data[0]->data[0]->data->{790}->data)[1], 32, 2);
-						$highCurrentFlow = substr(explode(':', $json->data[0]->data[0]->data->{790}->data)[1], 34, 2);
-						$currentFlow = hexdec($highCurrentFlow . $lowCurrentFlow);
-						$this->updateIfNecessary($currentFlow, "currentFlow");
+						$this->updateIfNecessary($this->getInValue($deviceData, 790, 1617), "currentFlow");
 
-						/* read target hardness of waterscenes */
+						/* water stop */
+                        $leckageschutzStatusflag = $this->getInValue($deviceData, 792, 0);
+                        if (strlen($leckageschutzStatusflag) === 8) {
+                            $wasserstop = $leckageschutzStatusflag[0];
+                        } else {
+                            $wasserstop = 0;
+                        }
+                        $this->SendDebug(__FUNCTION__, 'TODO: water_stop: ' . $wasserstop, 0);
+
+                        /* read target hardness of waterscenes */
 						$this->updateIfNecessary((int) $json->data[0]->hardness_washing, "Hardness_Washing");
 						$this->updateIfNecessary((int) $json->data[0]->hardness_shower, "Hardness_Shower");
 						$this->updateIfNecessary((int) $json->data[0]->hardness_watering, "Hardness_Watering");
@@ -381,11 +364,15 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                             $this->SendDebug(__FUNCTION__, 'TODO: waterscene_time_washing (Stunden) = ' . $json->data[0]->waterscene_time_washing, 0);
                         }
 
-
-
 						/* read target hardness */
-                        $targetHardness = hexdec(substr(explode(':',$json->data[0]->data[0]->data->{790}->data)[1], 16, 2));
-                        $this->updateIfNecessary($targetHardness, "targetHardness");
+                        $this->updateIfNecessary($this->getInValue($deviceData, 790, 8), "targetHardness");
+
+                        /*
+                        echo sprintf('8 - Anzeige resthärte: %s', $this->getInValue($deviceData, 790, 8)) . PHP_EOL;
+                        echo sprintf('10 - Anzeige rohhärte / aktuelle Rohwasserhärte: %s', $this->getInValue($deviceData, 790, 10)) . PHP_EOL;
+                        echo sprintf('26 - Anzeige rohhärte / Rohwasserhärte1 in °dH: %s', $this->getInValue($deviceData, 790, 26)) . PHP_EOL;
+                        echo sprintf('1617 - Wasserdurchfluss: %s', $this->getInValue($deviceData, 790, 1617)) . PHP_EOL;
+                        */
 
 						/* Remaining time of active water scene */
 						if($this->GetValue('activeScene') != 0)
@@ -478,6 +465,218 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			$this->Login();
 		}
 
+        /*
+         * abgeleitet aus https://www.myjudo.eu/js/deviceDataConverter.js?version=1.214
+         */
+        private function getInValue(array $deviceData, int $index = null, int $subIndex = null){
+            $value = null;
+            $data = $deviceData[$index]['data']??'';
+
+            //echo sprintf('Index: %s, subIndex: %s', $index, $subIndex) . PHP_EOL;
+            //var_dump ( $deviceData[$index]);
+
+            switch ($index){
+                // SW - Version / Get SW_Version
+                // 3 Bytes
+                case 1:
+                    $svMinor = intval(substr($data, 2, 2), 16);
+                    $svMajor = intval(substr($data, 4, 2), 16);
+
+                    if ($svMinor < 10) {
+                        if ($svMinor === 0){
+                            $minor = '0';
+                        } else {
+                            $minor = '0' . $svMinor;
+                        }
+                    } else {
+                        $minor = $svMinor;
+                    }
+
+                    $value = $svMajor . '.' . $minor;
+                    break;
+
+                // HW - Version / Get_HW_Versionb
+                // 2 Bytes
+                case 2:
+                    $hvMinor = intval(substr($data, 0, 2), 16);
+                    $hvMajor = intval(substr($data, 2, 2), 16);
+
+                    if (($hvMinor > 0) && ($hvMinor < 10)){
+                        $hvMinor = '0' . $hvMinor;
+                    }
+
+                    $value = $hvMajor . '.' . $hvMinor;
+                    break;
+
+                // Gerätenummer / Get_JDO_SerialNo
+                // 4 Bytes unsigned
+                case 3:
+                    if (strlen($data) === 8) {
+                        $value = (string) hexdec($this->formatEndian(substr($data, 0, 8)));
+                    } else {
+                        $value = '';
+                    }
+                    break;
+
+                // Stunden bis zur nächsten Wartung / Get_Service_Time
+                // 6 Bytes unsigned
+                // 16 bit Stunden bis zur nächsten Wartung
+                // 16 bit Registrierte Wartungen
+                // 16 bit Angeforderte Wartungen
+                case 7:
+                    if (strlen($data) === 12) {
+                        $v1 = hexdec($this->formatEndian(substr($data, 0, 4) . '0000'));
+                        $v1 = intdiv($v1, 24); //Umrechnung von Stunden in Tage
+
+                        $v2 = hexdec($this->formatEndian(substr($data, 4, 4) . '0000'));
+
+                        $v3 = hexdec($this->formatEndian(substr($data, 8, 4) . '0000'));
+
+                        $value = implode(':', [$v1, $v2, $v3]);
+                    } else {
+                        $value = $data;
+                    }
+                    break;
+
+                    // Gesamtwasserverbrauch / Get_TotalWater
+                // 4 Byte
+                case 8:
+                    if (strlen($data) === 8) {
+                        $value = hexdec($this->formatEndian(substr($data, 0, 8)));
+                    } else {
+                        $value = 0;
+                    }
+                    break;
+
+                // UPS Status lesen / Get_UPS
+                // 9 Byte
+                //    1	8-Bit (unsigned)	UPS Version_LO
+                //    2	8-Bit (unsigned)	UPS Version_HI
+                //    3	8-Bit (flag)	UPS-STATUSÂ Â  Bit7=LOW_BATT ; BIT6=Batterietest_lÃ¤uft; Bit5= 0; 	   Bit4=Wiederholender Test mit gesetztem LowBatt;
+                //    Bit3=RelaisOn;	   Bit2=Batteriebetrieb;	    Bit1=24VOK; Bit0=Notstrommodul vorhanden
+                //    4	8-Bit (unsigned)	UPS (letzte gemessene) Batteriespannung in Prozent
+                //    5	8-Bit (unsigned)	UPS	(letzte gemessene) Batteriespannung in 0,1V (*10)
+                //    6					8-Bit (unsigned)	UPS Aktuelle Batterielaufzeit in Sekunden (wird nach Batteriewechsel gelÃ¶scht)
+                //    7					8-Bit (unsigned)	UPS Aktuelle Batterielaufzeit in Minuten	(wird nach Batteriewechsel gelÃ¶scht)
+                //    8					8-Bit (unsigned)	UPS Aktuelle Batterielaufzeit in Stunden  (wird nach Batteriewechsel gelÃ¶scht)
+                //    9					8-Bit (unsigned)	UPS BatterieReplace Counter Anzahl Batteriewechsel
+
+                // index 93 Byte 3 - BatteriekapazitÃ¤t
+                case 93:
+                    if(strlen($data) === 10){
+                        $kapazitaet = intval(substr($data, 6, 2),16);
+                        $value = (string) $kapazitaet;
+                    } else if(strlen($data) === 18){
+                        // i-soft 2019er
+                        $kapazitaet = intval(substr($data, 6, 2),16);
+                        $sekunden = intval(substr($data, 10,2),16);
+                        $minuten = intval(substr($data, 12,2),16);
+                        $stunden = intval(substr($data, 14,2),16);
+                        $value = implode(':', [$kapazitaet, $sekunden, $minuten, $stunden]);
+                    } else {
+                        $value = '0';
+                    }
+                    break;
+
+                // Auslesen der Datentabelle / Get_Tableread
+                // 1 byte subcode (32 byte response)
+                // SUBCODE 0
+                case 790:
+                    if (strlen($data) === 66) {
+                        if (!is_null($subIndex)) {
+                            $data = explode(':', $data)[1];
+                            switch ($subIndex) {
+
+                                //Notstrommodul Ja/Nein
+                                case 2:
+                                    $value = hexdec(substr($data, 2, 2));
+                                    $value = decbin($value);
+                                    while (strlen($value) < 8){
+                                        $value = '0' . $value;
+                                    }
+                                    break;
+
+
+                                case 8: // Anzeige resthärte
+                                case 10: // Anzeige rohhärte / aktuelle Rohwasserhärte
+                                case 26: // Anzeige rohhärte / Rohwasserhärte1 in °dH
+                                    $value =intval(substr($data, $subIndex*2, 2), 16);
+                                    break;
+
+                                case 1617: // Wasserdurchfluss
+                                    $value = hexdec($this->formatEndian(substr($data, 32, 4) . '0000'));
+                                    break;
+                            }
+                        } else {
+                            $value = '';
+                        }
+                    }
+                    break;
+
+                case 791:
+                    $value = '';
+                    if (strlen($data) === 66) {
+                        if (!is_null($subIndex)) {
+                            $data = explode(':', $data)[1];
+                            switch ($subIndex) {
+                                // Gesamt Regenerationszahl
+                                case 3031:
+                                    $tREGANZAHL_LO = substr($data, 60,2);
+                                    $tREGANZAHL_HI = substr($data, 66,2);
+                                    $value = intval($tREGANZAHL_HI . $tREGANZAHL_LO, 16);
+                                    break;
+
+/*
+                                // Statusflag Betrieb/Regeneration
+                                case 0:
+                                    var flag = parseInt(data.slice(0, 2), 16);
+                                    var flagBinary = (+flag).toString(2);
+                                    var statusFlag = (flagBinary.length > 0) ? flagBinary[flagBinary.length - 1] : 0;
+                                    value = statusFlag;
+                                    break;
+*/
+                            }
+                        }
+                    }
+                    break;
+
+                // Wasserstop Daten
+                case 792:
+                    $value = '';
+                    if (strlen($data) === 66) {
+                        if (!is_null($subIndex)) {
+                            $data = explode(':', $data)[1];
+                            switch ($subIndex) {
+
+                                // Wasserstop statusflag
+                                case 0:
+                                    $standby = intval(substr($data, $subIndex, 2),16);
+                                    $standbyBinary = decbin($standby);
+                                    $value = $standbyBinary;
+                                    break;
+                            }
+                        }
+                    }
+                    break;
+
+                // Absoluten Salzstand lesen / GET_SALT_Volume
+                // 4 Byte
+                // low(Salzgew) | high(Salzgew) | low(Reichweite) | high(Reichweite)
+                case 94:
+                    if (strlen($data) === 8) {
+                        $salzstand = hexdec($this->formatEndian(substr($data, 0, 4) . '0000'));
+                        $reichweite = hexdec($this->formatEndian(substr($data, 4, 4) . '0000'));
+                        $value = implode(':', [$salzstand, $reichweite]);
+                    } else {
+                        $value = $data;
+                    }
+                    break;
+
+            }
+
+            //echo sprintf('value: %s', $value). PHP_EOL. PHP_EOL;
+            return $value;
+        }
 		private function formatEndian($endian, $format = 'N'): string {
 			$endian = intval($endian, 16);      // convert string to hex
 			$endian = pack('L', $endian);       // pack hex to binary sting (unsinged long, machine byte order)

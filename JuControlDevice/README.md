@@ -31,15 +31,15 @@ Beschreibung des Moduls.
 
 __Konfigurationsseite__:
 
-Name     		| Beschreibung
------------------------	| ------------------
- Username        	|  Benutzername des myjudo-Accounts
- Passwort      		|  zugehöriges Benutzerpasswort
- Refreshrate		|  Aktualisierungsintervall
- Time Shower		|  Wasserszenen Zeit Duschen
- Time Heating		|  Wasserszenen Zeit Heizungsfüllung
- Time Watering		|  Wasserszenen Zeit Bewässerung
- Time Washing		|  Wasserszenen Zeit Waschen
+| Eigenschaft | Bezeichnung     		    | Beschreibung                                |
+|-------------|-----------------------|---------------------------------------------|
+| Username    | Benutzername        	 | Benutzername des myjudo-Accounts            |
+| Password    | Passwort      		      | zugehöriges Benutzerpasswort                |
+| RefreshRate | Refreshrate		         | Aktualisierungsintervall in Sekunden |
+| TimeShower  | Time Shower		         | Wasserszenen Zeit Duschen                   |
+| TimeHeating | Time Heating		        | Wasserszenen Zeit Heizungsfüllung           |
+| TimeWatering| Time Watering		       | Wasserszenen Zeit Bewässerung               |
+| TimeWashing | Time Washing		        | Wasserszenen Zeit Waschen                   |
 
 ### 5. Statusvariablen und Profile
 
@@ -47,32 +47,32 @@ Die Statusvariablen/Kategorien werden automatisch angelegt. Das Löschen einzeln
 
 #### Statusvariablen
 
-Name					| Typ     	| Beschreibung
----------------------------------------	| ------------- | ------------
- Geräte-ID				| String	|
- Geräte-Typ				| String	|
- Status					| String	|
- Seriennummer				| String	|
- Ziel-Wasserhärte			| Integer	|
- Ist-Wasserhärte			| Float		|
- Füllstand Salz				| Integer	|
- Aktueller Durchfluss			| Integer	|
- Batteriezustand Notstrommodul		| Integer	|
- Aktive Wasserszene			| Integer	|
- SW-Version				| String	|
- HW-Version				| String	|	
- CCU-Version				| String	|
- Tage bis zur Wartung			| Integer	|
- Notstrommodul verbaut			| String	|
- Gesamt-Durchfluss			| Integer	|
- Gesamt-Regenerationen			| Integer	|
- Gesamt-Wartungen			| Integer	|
- Szenen-Wasserhärte Waschen		| Integer	|
- Szenen-Wasserhärte Heizung		| Integer	|
- Szenen-Wasserhärte Bewässerung		| Integer	|
- Szenen-Wasserhärte Duschen		| Integer	|
- Restlaufzeit Szene			| Integer	|
- Szenen-Wasserhärte Normal		| Integer	|
+| Default Name		                 | Ident | Typ     	 | Beschreibung                    |
+|--------------------------------|-------|-----------|---------------------------------|
+| Geräte-ID		                    |       | String	   |                                 |
+| Geräte-Typ		                   |       | String	   |                                 |
+| Status			                      |       | String	   |                                 |
+| Seriennummer		                 |       | String	   |                                 |
+| Ziel-Wasserhärte	              |       | Integer	  |                                 |
+| Ist-Wasserhärte	               |       | Float		   |                                 |
+| Füllstand Salz	                |       | Integer	  |                                 |
+| Aktueller Durchfluss           |       | Integer	  |                                 |
+| Batteriezustand Notstrommodul  |       | Integer	  |                                 |
+| Aktive Wasserszene	          |       | Integer	  |                                 |
+| SW-Version			                  |       | String	   | Sofware Version Gerätesteuerung |
+| HW-Version			                  |       | String	   |                                 |
+| CCU-Version			                 |       | String	   |                                 |
+| Tage bis zur Wartung	          |       | Integer	  |                                 |
+| Notstrommodul verbaut          |       | String	   |                                 |
+| Gesamt-Durchfluss	             |       | Integer	  |                                 |
+| Gesamt-Regenerationen          |       | Integer	  |                                 |
+| Gesamt-Wartungen		             |       | Integer	  |                                 |
+| Szenen-Wasserhärte Waschen     |       | Integer	  |                                 |
+| Szenen-Wasserhärte Heizung     |       | Integer	  |                                 |
+| Szenen-Wasserhärte Bewässerung |       | Integer	  |                                 |
+| Szenen-Wasserhärte Duschen 		  |       | Integer	  |                                 |
+| Restlaufzeit Szene			          |       | Integer	  |                                 |
+| Szenen-Wasserhärte Normal		    |       | Integer	  |                                 |
 
 #### Profile
 
