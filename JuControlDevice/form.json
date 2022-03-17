@@ -16,27 +16,32 @@
                 },
                 {
                     "name": "RefreshRate",
-                    "type": "ValidationTextBox",
+                    "type": "NumberSpinner",
+                    "minimum": 0,
                     "caption": "Refresh Rate in Seconds"
                 },
                 {
                     "name": "TimeShower",
-                    "type": "ValidationTextBox",
+                    "type": "NumberSpinner",
+                    "minimum": 0,
                     "caption": "Water scene 'Shower' duration"
                 },
                 {
                     "name": "TimeHeating",
-                    "type": "ValidationTextBox",
+                    "type": "NumberSpinner",
+                    "minimum": 0,
                     "caption": "Water scene 'Heating' duration"
                 },
                 {
                     "name": "TimeWatering",
-                    "type": "ValidationTextBox",
+                    "type": "NumberSpinner",
+                    "minimum": 0,
                     "caption": "Water scene 'Watering' duration"
                 },
                 {
                     "name": "TimeWashing",
-                    "type": "ValidationTextBox",
+                    "type": "NumberSpinner",
+                    "minimum": 0,
                     "caption": "Water scene 'Washing' duration"
                 }
             ]
