@@ -46,17 +46,15 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 
 			$this->RegisterVariableInteger("batteryState", "Batteriezustand Notstrommodul", "JCD.Percent", 8);
 
-			$this->RegisterProfileInteger("JCD.Waterscene", "Drops", "", "", 0, 10, 1);
+			$this->RegisterProfileInteger("JCD.Waterscene", "Drops", "", "", 0, 4, 0);
 			IPS_SetVariableProfileAssociation ("JCD.Waterscene", 0, "Normal", "Ok", 0x00FF00);
 			IPS_SetVariableProfileAssociation ("JCD.Waterscene", 1, "Duschen", "Shower", 0xFF9C00);
 			IPS_SetVariableProfileAssociation ("JCD.Waterscene", 2, "Heizungsfüllung", "Temperature", 0xFF9C00);
 			IPS_SetVariableProfileAssociation ("JCD.Waterscene", 3, "Bewässerung", "Drops	", 0xFF9C00);
 			IPS_SetVariableProfileAssociation ("JCD.Waterscene", 4, "Waschen", "Pants", 0xFF9C00);
 
-
 			$this->RegisterVariableInteger("activeScene", "Aktive Wasserszene", "JCD.Waterscene", 9);
 			$this->EnableAction("activeScene");
-
 
 			$this->RegisterVariableString("swVersion", "SW Version", "", 10);
 			$this->RegisterVariableString("hwVersion", "HW Version", "", 11);
@@ -65,13 +63,20 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			$this->RegisterProfileInteger("JCD.Days", "Clock", "", " Tage", 0, 10000, 1);
 
 			$this->RegisterVariableInteger("nextService", "Tage bis zur Wartung", "JCD.Days", 13);
-			$this->RegisterVariableString("hasEmergencySupply", "Notstrommodul verbaut", "", 14);
+
+            //$this->RegisterProfileBool
+            $this->RegisterProfileBoolean('JCD.NoYes', '', '', '', [
+                [false, $this->Translate('No'), '', -1],
+                [true, $this->Translate('Yes'),  '', -1]
+            ]);
+
+            $this->RegisterVariableBoolean("hasEmergencySupply", "Notstrommodul verbaut", "JCD.NoYes", 14);
 
 			$this->RegisterProfileInteger("JCD.Liter", "Wave", "", " Liter", 0, 99999999, 1);
 			$this->RegisterVariableInteger("totalWater", "Gesamt-Durchfluss", "JCD.Liter", 15);
 
-			$this->RegisterVariableString("totalRegeneration", "Gesamt-Regenerationen", "", 16);
-			$this->RegisterVariableString("totalService", "Gesamt-Wartungen", "", 17);
+			$this->RegisterVariableInteger("totalRegeneration", "Gesamt-Regenerationen", "", 16);
+			$this->RegisterVariableInteger("totalService", "Gesamt-Wartungen", "", 17);
 
 			$this->RegisterVariableInteger("Hardness_Washing", "Szenen-Wasserhärte Waschen", "JCD.dH_int", 18);
 			$this->EnableAction("Hardness_Washing");
@@ -256,7 +261,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                         }
 
                         if ($emergencySupplyAvailable) {
-							$this->updateIfNecessary("Ja", "hasEmergencySupply");
+							$this->updateIfNecessary(true, "hasEmergencySupply");
 
                             $batteryValues = explode(':', $this->getInValue($deviceData, 93));
 
@@ -273,7 +278,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 
                         }
 						else{
-							$this->updateIfNecessary("Nein", "hasEmergencySupply");
+							$this->updateIfNecessary(false, "hasEmergencySupply");
 						}
 
 						/* Active scene */
@@ -719,7 +724,27 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 				IPS_SetVariableProfileValues($Name, $MinValue, $MaxValue, $StepSize);        
 		}
 
-		private function updateIfNecessary($newValue, string $ident): void
+        private function RegisterProfileBoolean($Name, $Icon, $Prefix, $Suffix, $Associations)
+        {
+            if (!IPS_VariableProfileExists($Name)) {
+                IPS_CreateVariableProfile($Name, VARIABLETYPE_BOOLEAN);
+            } else {
+                $profile = IPS_GetVariableProfile($Name);
+                if ($profile['ProfileType'] != VARIABLETYPE_BOOLEAN) {
+                    throw new Exception('Variable profile type does not match for profile ' . $Name);
+                }
+            }
+
+            IPS_SetVariableProfileIcon($Name, $Icon);
+            IPS_SetVariableProfileText($Name, $Prefix, $Suffix);
+
+            foreach ($Associations as $Association) {
+                IPS_SetVariableProfileAssociation($Name, (float) $Association[0], $Association[1], $Association[2], $Association[3]);
+            }
+        }
+
+
+        private function updateIfNecessary($newValue, string $ident): void
 		{
 			if ($this->GetValue($ident) != $newValue)
 			{

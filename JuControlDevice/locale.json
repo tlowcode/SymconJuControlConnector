@@ -7,7 +7,9 @@
             "Water scene 'Shower' duration": "Laufzeit Wasserszene 'Duschen'",
             "Water scene 'Heating' duration": "Laufzeit Wasserszene 'Heizung'",
             "Water scene 'Watering' duration": "Laufzeit Wasserszene 'Bewässerung'",
-            "Water scene 'Washing' duration": "Laufzeit Wasserszene 'Waschen'"
+            "Water scene 'Washing' duration": "Laufzeit Wasserszene 'Waschen'",
+            "No": "Nein",
+            "Yes": "Ja"
         }
     }
 }
