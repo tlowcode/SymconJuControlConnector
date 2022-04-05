@@ -7,12 +7,24 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 
 	class JuControlDevice extends IPSModule
 	{
+
+        //variable idents
+        private const VAR_IDENT_BATTERYSTATE = 'batteryState';
+        private const VAR_IDENT_BATTERYRUNTIME = 'batteryRuntime';
+        private const VAR_IDENT_CURRENTFLOW = 'currentFlow';
+        private const VAR_IDENT_WATERSTOP = 'waterStop';
+        private const VAR_IDENT_RANGESALTPERCENT = 'rangeSaltPercent';
+        private const VAR_IDENT_RANGESALTDAYS = 'rangeSaltDays';
+        private const VAR_IDENT_SALTLEVEL = 'saltLevel';
+
 		public function Create()
 		{
 			//Never delete this line!
 			parent::Create();
 
-			$this->RegisterAttributeString("AccessToken", "noToken");
+			$position = 0;
+
+            $this->RegisterAttributeString("AccessToken", "noToken");
 
 			$this->RegisterTimer("RefreshTimer", 0, 'JCD_RefreshData('. $this->InstanceID . ');');	
 
@@ -24,27 +36,35 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			$this->RegisterPropertyInteger("TimeWatering", 60);
 			$this->RegisterPropertyInteger("TimeWashing", 60);
 
-			$this->RegisterVariableString("deviceID", "Geräte-ID", "", 0);
-			$this->RegisterVariableString("deviceType", "Geräte-Typ", "", 1);
-			$this->RegisterVariableString("deviceState", "Status", "", 2);
-			$this->RegisterVariableString("deviceSN", "Seriennummer", "", 3);
+            //profiles
+            $this->RegisterProfileInteger("JCD.Days", "Clock", "", " Tage", 0, 0, 0);
+            $this->RegisterProfileInteger("JCD.lph", "Drops", "", " l/h", 0, 0, 0);
+
+            $this->RegisterVariableString("deviceID", "Geräte-ID", "", $position++);
+			$this->RegisterVariableString("deviceType", "Geräte-Typ", "", $position++);
+			$this->RegisterVariableString("deviceState", "Status", "", $position++);
+			$this->RegisterVariableString("deviceSN", "Seriennummer", "", $position++);
 
 
 			$this->RegisterProfileInteger("JCD.dH_int", "Drops", "", " °dH", 0, 50, 1);
 			$this->RegisterProfileFloat("JCD.dH_float", "Drops", "", " °dH", 0, 50, 0.1);
 
-			$this->RegisterVariableInteger("targetHardness", "Ziel-Wasserhärte", "JCD.dH_int", 4);
-			$this->RegisterVariableFloat("inputHardness", "Ist-Wasserhärte", "JCD.dH_float", 5);
+			$this->RegisterVariableInteger("targetHardness", "Ziel-Wasserhärte", "JCD.dH_int", $position++);
+			$this->RegisterVariableFloat("inputHardness", "Ist-Wasserhärte", "JCD.dH_float", $position++);
 
 
-			$this->RegisterProfileInteger("JCD.Percent", "Intensity", "", " %", 0, 100, 1);
-			$this->RegisterVariableInteger("rangeSaltPercent", "Füllstand Salz", "JCD.Percent", 6);
+			$this->RegisterVariableInteger(self::VAR_IDENT_RANGESALTPERCENT, 'Füllstand Salz', '~Intensity.100', $position++);
+			$this->RegisterVariableInteger(self::VAR_IDENT_RANGESALTDAYS, 'Reichweite Salzvorrat', 'JCD.Days', $position++);
 
-			$this->RegisterProfileInteger("JCD.lph", "Drops", "", " l/h", 0, 1000000, 1);
-			$this->RegisterVariableInteger("currentFlow", "Aktueller Durchfluss", "JCD.lph", 7);
+			$this->RegisterProfileInteger('JCD.kg', '', '', ' kg', 0, 0, 0);
+			$this->RegisterVariableInteger(self::VAR_IDENT_SALTLEVEL, 'Salzvorrat', 'JCD.kg', $position++);
+
+			$this->RegisterVariableInteger(self::VAR_IDENT_CURRENTFLOW, 'Aktueller Durchfluss', 'JCD.lph', $position++);
+			$this->RegisterVariableBoolean(self::VAR_IDENT_WATERSTOP, 'Wasserstop', '~Switch', $position++);
 
 
-			$this->RegisterVariableInteger("batteryState", "Batteriezustand Notstrommodul", "JCD.Percent", 8);
+			$this->RegisterVariableInteger(self::VAR_IDENT_BATTERYSTATE, 'Batteriezustand Notstrommodul', '~Intensity.100', $position++);
+			$this->RegisterVariableString(self::VAR_IDENT_BATTERYRUNTIME, 'BatteryRuntime (H:MM:SS)', '', $position++);
 
 			$this->RegisterProfileInteger("JCD.Waterscene", "Drops", "", "", 0, 4, 0);
 			IPS_SetVariableProfileAssociation ("JCD.Waterscene", 0, "Normal", "Ok", 0x00FF00);
@@ -53,16 +73,14 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			IPS_SetVariableProfileAssociation ("JCD.Waterscene", 3, "Bewässerung", "Drops	", 0xFF9C00);
 			IPS_SetVariableProfileAssociation ("JCD.Waterscene", 4, "Waschen", "Pants", 0xFF9C00);
 
-			$this->RegisterVariableInteger("activeScene", "Aktive Wasserszene", "JCD.Waterscene", 9);
+			$this->RegisterVariableInteger("activeScene", "Aktive Wasserszene", "JCD.Waterscene", $position++);
 			$this->EnableAction("activeScene");
 
-			$this->RegisterVariableString("swVersion", "SW Version", "", 10);
-			$this->RegisterVariableString("hwVersion", "HW Version", "", 11);
-			$this->RegisterVariableString("ccuVersion", "CCU Version", "", 12);
+			$this->RegisterVariableString("swVersion", "SW Version", "", $position++);
+			$this->RegisterVariableString("hwVersion", "HW Version", "", $position++);
+			$this->RegisterVariableString("ccuVersion", "CCU Version", "", $position++);
 
-			$this->RegisterProfileInteger("JCD.Days", "Clock", "", " Tage", 0, 10000, 1);
-
-			$this->RegisterVariableInteger("nextService", "Tage bis zur Wartung", "JCD.Days", 13);
+			$this->RegisterVariableInteger("nextService", "Tage bis zur Wartung", "JCD.Days", $position++);
 
             //$this->RegisterProfileBool
             $this->RegisterProfileBoolean('JCD.NoYes', '', '', '', [
@@ -70,31 +88,31 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                 [true, $this->Translate('Yes'),  '', -1]
             ]);
 
-            $this->RegisterVariableBoolean("hasEmergencySupply", "Notstrommodul verbaut", "JCD.NoYes", 14);
+            $this->RegisterVariableBoolean("hasEmergencySupply", "Notstrommodul verbaut", "JCD.NoYes", $position++);
 
 			$this->RegisterProfileInteger("JCD.Liter", "Wave", "", " Liter", 0, 99999999, 1);
-			$this->RegisterVariableInteger("totalWater", "Gesamt-Durchfluss", "JCD.Liter", 15);
+			$this->RegisterVariableInteger("totalWater", "Gesamt-Durchfluss", "JCD.Liter", $position++);
 
-			$this->RegisterVariableInteger("totalRegeneration", "Gesamt-Regenerationen", "", 16);
-			$this->RegisterVariableInteger("totalService", "Gesamt-Wartungen", "", 17);
+			$this->RegisterVariableInteger("totalRegeneration", "Gesamt-Regenerationen", "", $position++);
+			$this->RegisterVariableInteger("totalService", "Gesamt-Wartungen", "", $position++);
 
-			$this->RegisterVariableInteger("Hardness_Washing", "Szenen-Wasserhärte Waschen", "JCD.dH_int", 18);
+			$this->RegisterVariableInteger("Hardness_Washing", "Szenen-Wasserhärte Waschen", "JCD.dH_int", $position++);
 			$this->EnableAction("Hardness_Washing");
 
-			$this->RegisterVariableInteger("Hardness_Heater", "Szenen-Wasserhärte Heizung", "JCD.dH_int", 19);
+			$this->RegisterVariableInteger("Hardness_Heater", "Szenen-Wasserhärte Heizung", "JCD.dH_int", $position++);
 			$this->EnableAction("Hardness_Heater");
 
-			$this->RegisterVariableInteger("Hardness_Watering", "Szenen-Wasserhärte Bewässerung", "JCD.dH_int", 20);
+			$this->RegisterVariableInteger("Hardness_Watering", "Szenen-Wasserhärte Bewässerung", "JCD.dH_int", $position++);
 			$this->EnableAction("Hardness_Watering");
 
-			$this->RegisterVariableInteger("Hardness_Shower", "Szenen-Wasserhärte Duschen", "JCD.dH_int", 21);
+			$this->RegisterVariableInteger("Hardness_Shower", "Szenen-Wasserhärte Duschen", "JCD.dH_int", $position++);
 			$this->EnableAction("Hardness_Shower");
 
-			$this->RegisterVariableInteger("Hardness_Normal", "Szenen-Wasserhärte Normal", "JCD.dH_int", 22);
+			$this->RegisterVariableInteger("Hardness_Normal", "Szenen-Wasserhärte Normal", "JCD.dH_int", $position++);
 			$this->EnableAction("Hardness_Normal");
 
 			$this->RegisterProfileInteger("JCD.Minutes", "Clock", "", " Minuten", 0, 1000, 1);
-			$this->RegisterVariableInteger("remainingTime", "Restlaufzeit Szene", "JCD.Minutes", 23);
+			$this->RegisterVariableInteger("remainingTime", "Restlaufzeit Szene", "JCD.Minutes", $position++);
 
 			$this->SetStatus(IS_INACTIVE);
 
@@ -267,13 +285,13 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 
                             /* Battery percentage */
 							if (isset($batteryValues[0])){
-                                $this->updateIfNecessary((int) $batteryValues[0], "batteryState");
+                                $this->updateIfNecessary((int) $batteryValues[0], self::VAR_IDENT_BATTERYSTATE);
                             }
 
                             /* Battery runtime */
                             if (count($batteryValues) > 1){
                                 $batteryRuntime = sprintf('%d:%02d:%02d', (int) $batteryValues[3], (int) $batteryValues[2],  (int) $batteryValues[1]);
-                                $this->SendDebug(__FUNCTION__, 'TODO: BatteryRuntime (H:MM:SS) = ' . $batteryRuntime, 0);
+                                $this->updateIfNecessary($batteryRuntime, self::VAR_IDENT_BATTERYRUNTIME);
                             }
 
                         }
@@ -327,26 +345,25 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 
 						$SaltLevel = $saltInfo[0] / 1000; //Salzgewicht in kg
 						$SaltLevelPercent = (int) (2 * $SaltLevel);
-						$this->updateIfNecessary((int) $SaltLevelPercent, "rangeSaltPercent");
-                        $this->SendDebug(__FUNCTION__, 'TODO: Salt Level (kg) = ' . $SaltLevel, 0);
-
                         $SaltRange = $saltInfo[1]; //Salzreichweite in Tagen
-                        $this->SendDebug(__FUNCTION__, 'TODO: Salt Range (days) = ' . $SaltRange, 0);
+						$this->updateIfNecessary($SaltLevelPercent, self::VAR_IDENT_RANGESALTPERCENT);
+						$this->updateIfNecessary($SaltLevel, self::VAR_IDENT_SALTLEVEL);
+						$this->updateIfNecessary($SaltRange, self::VAR_IDENT_RANGESALTDAYS);
 
                         /* Input hardness */
 						$this->updateIfNecessary($this->getInValue($deviceData, 790, 26), "inputHardness");
 
 						/* currentFlow */
-						$this->updateIfNecessary($this->getInValue($deviceData, 790, 1617), "currentFlow");
+						$this->updateIfNecessary($this->getInValue($deviceData, 790, 1617), self::VAR_IDENT_CURRENTFLOW);
 
 						/* water stop */
                         $leckageschutzStatusflag = $this->getInValue($deviceData, 792, 0);
                         if (strlen($leckageschutzStatusflag) === 8) {
-                            $wasserstop = $leckageschutzStatusflag[0];
+                            $wasserstop = (boolean) $leckageschutzStatusflag[0];
                         } else {
-                            $wasserstop = 0;
+                            $wasserstop = false;
                         }
-                        $this->SendDebug(__FUNCTION__, 'TODO: water_stop: ' . $wasserstop, 0);
+                        $this->updateIfNecessary($wasserstop, self::VAR_IDENT_WATERSTOP);
 
                         /* read target hardness of waterscenes */
 						$this->updateIfNecessary((int) $json->data[0]->hardness_washing, "Hardness_Washing");
@@ -380,16 +397,12 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                         */
 
 						/* Remaining time of active water scene */
-						if($this->GetValue('activeScene') != 0)
+						if($this->GetValue('activeScene') !== 0)
 						{
 							if($json->data[0]->disable_time !== '')
 							{
 								$remainingTime = (((int)$json->data[0]->disable_time - time()) / 60) + 1;
-								$this->updateIfNecessary((int) $remainingTime, "remainingTime");
-								if ((int) $remainingTime <= 0)
-								{
-									$this->updateIfNecessary(0, "remainingTime");
-								}
+								$this->updateIfNecessary(max((int) $remainingTime, 0), "remainingTime");
 							}
 							else
 							{
