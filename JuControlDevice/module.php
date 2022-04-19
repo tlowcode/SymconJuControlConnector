@@ -13,6 +13,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
         private const VAR_IDENT_BATTERYRUNTIME = 'batteryRuntime';
         private const VAR_IDENT_CURRENTFLOW = 'currentFlow';
         private const VAR_IDENT_WATERSTOP = 'waterStop';
+        private const VAR_IDENT_ACTIVESCENE = 'activeScene';
         private const VAR_IDENT_RANGESALTPERCENT = 'rangeSaltPercent';
         private const VAR_IDENT_RANGESALTDAYS = 'rangeSaltDays';
         private const VAR_IDENT_SALTLEVEL = 'saltLevel';
@@ -73,6 +74,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 
 			$this->RegisterVariableInteger(self::VAR_IDENT_CURRENTFLOW, 'Aktueller Durchfluss', 'JCD.lph', ++$position);
 			$this->RegisterVariableBoolean(self::VAR_IDENT_WATERSTOP, 'Wasserstop', '~Switch', ++$position);
+            $this->EnableAction(self::VAR_IDENT_WATERSTOP);
 
 
 			$this->RegisterVariableInteger(self::VAR_IDENT_BATTERYSTATE, 'Batteriezustand Notstrommodul', '~Intensity.100', ++$position);
@@ -85,8 +87,8 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			IPS_SetVariableProfileAssociation ("JCD.Waterscene", 3, "Bewässerung", "Drops	", 0xFF9C00);
 			IPS_SetVariableProfileAssociation ("JCD.Waterscene", 4, "Waschen", "Pants", 0xFF9C00);
 
-			$this->RegisterVariableInteger("activeScene", "Aktive Wasserszene", "JCD.Waterscene", ++$position);
-			$this->EnableAction("activeScene");
+			$this->RegisterVariableInteger(self::VAR_IDENT_ACTIVESCENE, "Aktive Wasserszene", "JCD.Waterscene", ++$position);
+			$this->EnableAction(self::VAR_IDENT_ACTIVESCENE);
 
 			$this->RegisterVariableString("swVersion", "SW Version", "", ++$position);
 			$this->RegisterVariableString("hwVersion", "HW Version", "", ++$position);
@@ -174,9 +176,18 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 					break;
                 case self::VAR_IDENT_HARDNESS_NORMAL:
 					$command = "write%20data&dt=0x33&index=60&data=". $Value . "&da=0x1&&action=normal";
-					$parameter = 0;
 					break;
-				case "activeScene":
+
+                case self::VAR_IDENT_WATERSTOP:
+                    if ($Value){
+                       $command = "write%20data&dt=0x33&index=72&data=&da=0x1";
+                   } else {
+                       $command = "write%20data&dt=0x33&index=73&data=&da=0x1";
+                   }
+                   $strSerialnumber = '&serial_number=';
+                   break;
+
+				case self::VAR_IDENT_ACTIVESCENE:
 					switch ($Value) {
 						case 0:
 							$action = "normal";
@@ -223,18 +234,19 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 				. '/interface/?token=' . $this->ReadAttributeString("AccessToken") 
 				. $strSerialnumber . $this->GetValue('deviceSN')
 				. '&group=register&command=' 
-				. $command . '&parameter=' . $parameter;
+				. $command;
+                if (isset($parameter)){
+                    $deviceCommandUrl .= '&parameter=' . $parameter;
+                }
 
 				$this->SendDebug(__FUNCTION__, 'Requesting API URL '. $deviceCommandUrl, 0);
 				$response = $wc->Navigate($deviceCommandUrl);
 				$json = json_decode($response, false);
 				$this->SendDebug(__FUNCTION__, 'Received response from API: '. $response, 0);
 
-				if(isset($json->status) && $json->status === 'ok')
-				{
+				if(isset($json->status) && $json->status === 'ok') {
 					$this->SetValue($Ident, $Value);
-				}
-				else{
+				} else {
 					$this->SendDebug(__FUNCTION__, 'Error during request to JuControl API, ', 0);
 				}
 			} else {
@@ -243,7 +255,6 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 
 			$this->RefreshData();
 
-		 
 		}
 
 		public function RefreshData()
@@ -340,7 +351,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 								$sceneValue = 0;
 								break;
 						}
-						$this->updateIfNecessary($sceneValue, "activeScene");
+						$this->updateIfNecessary($sceneValue, self::VAR_IDENT_ACTIVESCENE);
 			
 
 						/* SW Version */
@@ -420,7 +431,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                         */
 
 						/* Remaining time of active water scene */
-						if($this->GetValue('activeScene') !== 0)
+						if($this->GetValue(self::VAR_IDENT_ACTIVESCENE) !== 0)
 						{
 							if($json->data[0]->disable_time !== '')
 							{
@@ -430,7 +441,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 							else
 							{
 								$this->updateIfNecessary(0, "remainingTime");
-								$this->updateIfNecessary(0, "activeScene");
+								$this->updateIfNecessary(0, self::VAR_IDENT_ACTIVESCENE);
 							}
 
 						}
