@@ -1,62 +1,32 @@
 {
     "elements": [
         {
-            "type": "ExpansionPanel",
-            "caption": "Basic Settings",
-            "items": [
-                {
-                    "name": "Username",
-                    "type": "ValidationTextBox",
-                    "caption": "Username"
-                },
-                {
-                    "name": "Password",
-                    "type": "PasswordTextBox",
-                    "caption": "Password"
-                },
-                {
-                    "name": "RefreshRate",
-                    "type": "NumberSpinner",
-                    "minimum": 0,
-                    "caption": "Refresh Rate in Seconds"
-                },
-                {
-                    "name": "TimeShower",
-                    "type": "NumberSpinner",
-                    "minimum": 0,
-                    "caption": "Water scene 'Shower' duration"
-                },
-                {
-                    "name": "TimeHeating",
-                    "type": "NumberSpinner",
-                    "minimum": 0,
-                    "caption": "Water scene 'Heating' duration"
-                },
-                {
-                    "name": "TimeWatering",
-                    "type": "NumberSpinner",
-                    "minimum": 0,
-                    "caption": "Water scene 'Watering' duration"
-                },
-                {
-                    "name": "TimeWashing",
-                    "type": "NumberSpinner",
-                    "minimum": 0,
-                    "caption": "Water scene 'Washing' duration"
-                }
-            ]
+            "name": "Username",
+            "type": "ValidationTextBox",
+            "caption": "Username"
+        },
+        {
+            "name": "Password",
+            "type": "PasswordTextBox",
+            "caption": "Password"
+        },
+        {
+            "name": "RefreshRate",
+            "type": "NumberSpinner",
+            "minimum": 0,
+            "caption": "Refresh Rate in Seconds"
         }
     ],
     "actions": [
         {
             "type": "Button",
             "caption": "Test Connection!",
-            "onClick": "JCD_TestConnection($id);"
+            "onClick": "$module = new IPSModule($id); $ret = JCD_TestConnection($id); if (!$ret) {echo $module->Translate('Error!');} else {echo $module->Translate('Success!');}"
         },
         {
             "type": "Button",
             "caption": "Update values!",
-            "onClick": "JCD_RefreshData($id);"
+            "onClick": "$module = new IPSModule($id); $ret = JCD_RefreshData($id); if (!$ret) {echo $module->Translate('Error!');} else {echo $module->Translate('Success!');}"
         }
     ],
     "status":

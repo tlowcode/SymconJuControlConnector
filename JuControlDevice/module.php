@@ -56,10 +56,6 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
             $this->RegisterPropertyString("Username", "");
 			$this->RegisterPropertyString("Password", "");
 			$this->RegisterPropertyInteger("RefreshRate", 60);
-			$this->RegisterPropertyInteger("TimeShower", 60);
-			$this->RegisterPropertyInteger("TimeHeating", 60);
-			$this->RegisterPropertyInteger("TimeWatering", 60);
-			$this->RegisterPropertyInteger("TimeWashing", 60);
 
             //profiles
             $this->RegisterProfileInteger("JCD.Days", "Clock", "", $this->Translate(' days'), 0, 0, 0);
@@ -320,7 +316,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 
 		}
 
-		public function RefreshData(): void
+		public function RefreshData(): bool
 		{
 			try {
 				$wc = new WebClient();
@@ -331,258 +327,255 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 				    //$this->SetStatus(104);
 				    //$this->SetTimerInterval("RefreshTimer", 0);
 				    $this->SendDebug(__FUNCTION__, 'Error during request to JuControl API: '. $deviceDataUrl, 0);
+                    return false;
 				}
-				else {
-					$json = json_decode($response, false);
 
-                    if (isset($json->status) && $json->status === 'ok')
-					{
-                        $this->SendDebug(__FUNCTION__, 'get_device_data: ' . $response, 0);
+                $json = json_decode($response, false);
 
-						/* Parse response */
+                if (isset($json->status) && $json->status === 'ok')
+                {
+                    $this->SendDebug(__FUNCTION__, 'get_device_data: ' . $response, 0);
 
-                        /* Device Type */
-                        if ($json->data[0]->data[0]->dt === '0x33')
-						{
-                            $this->SetStatus(IS_ACTIVE);
-							$this->updateIfNecessary('i-soft safe', "deviceType");
-						}
-						else
-						{
-							$this->SetStatus(202);
-							$this->SendDebug(__FUNCTION__, 'Wrong device type (' . $json->data[0]->data[0]->dt . ') found -> Aborting!', 0);
-							$this->SetTimerInterval("RefreshTimer", 0);
-						}
-			
-						/* Device S/N */
-						$this->updateIfNecessary($json->data[0]->serialnumber, "deviceSN");
-				
-						/* Device state */
-						$this->updateIfNecessary($json->data[0]->status, "deviceState");
+                    /* Parse response */
 
-						/* Connectivity module version */
-						$this->updateIfNecessary($json->data[0]->sv, "ccuVersion");
+                    /* Device Type */
+                    if ($json->data[0]->data[0]->dt === '0x33')
+                    {
+                        $this->SetStatus(IS_ACTIVE);
+                        $this->updateIfNecessary('i-soft safe', "deviceType");
+                    }
+                    else
+                    {
+                        $this->SetStatus(202);
+                        $this->SendDebug(__FUNCTION__, 'Wrong device type (' . $json->data[0]->data[0]->dt . ') found -> Aborting!', 0);
+                        $this->SetTimerInterval("RefreshTimer", 0);
+                    }
+
+                    /* Device S/N */
+                    $this->updateIfNecessary($json->data[0]->serialnumber, "deviceSN");
+
+                    /* Device state */
+                    $this->updateIfNecessary($json->data[0]->status, "deviceState");
+
+                    /* Connectivity module version */
+                    $this->updateIfNecessary($json->data[0]->sv, "ccuVersion");
 
 
-                        $deviceData = json_decode($response, true)['data'][0]['data'][0]['data'];
-                        $this->WriteAttributeString(self::ATTR_DEVICEDATA, json_encode($deviceData));
+                    $deviceData = json_decode($response, true)['data'][0]['data'][0]['data'];
+                    $this->WriteAttributeString(self::ATTR_DEVICEDATA, json_encode($deviceData));
 
-						/* Emergency supply available */
-						$emergencyModuleData = $this->getInValue($deviceData, 790, 2);
-                        if (strlen($emergencyModuleData) > 1) {
-                            $emergencySupplyAvailable = (boolean) $emergencyModuleData[strlen($emergencyModuleData) - 2];
-                        } else {
-                            $emergencySupplyAvailable = false;
+                    /* Emergency supply available */
+                    $emergencyModuleData = $this->getInValue($deviceData, 790, 2);
+                    if (strlen($emergencyModuleData) > 1) {
+                        $emergencySupplyAvailable = (boolean) $emergencyModuleData[strlen($emergencyModuleData) - 2];
+                    } else {
+                        $emergencySupplyAvailable = false;
+                    }
+
+                    if ($emergencySupplyAvailable) {
+                        $this->updateIfNecessary(true, "hasEmergencySupply");
+
+                        $batteryValues = explode(':', $this->getInValue($deviceData, 93));
+
+                        /* Battery percentage */
+                        if (isset($batteryValues[0])){
+                            $this->updateIfNecessary((int) $batteryValues[0], self::VAR_IDENT_BATTERYSTATE);
                         }
 
-                        if ($emergencySupplyAvailable) {
-							$this->updateIfNecessary(true, "hasEmergencySupply");
-
-                            $batteryValues = explode(':', $this->getInValue($deviceData, 93));
-
-                            /* Battery percentage */
-							if (isset($batteryValues[0])){
-                                $this->updateIfNecessary((int) $batteryValues[0], self::VAR_IDENT_BATTERYSTATE);
-                            }
-
-                            /* Battery runtime */
-                            if (count($batteryValues) > 1){
-                                $batteryRuntime = sprintf('%d:%02d:%02d', (int) $batteryValues[3], (int) $batteryValues[2],  (int) $batteryValues[1]);
-                                $this->updateIfNecessary($batteryRuntime, self::VAR_IDENT_BATTERYRUNTIME);
-                            }
-
-                        }
-						else{
-							$this->updateIfNecessary(false, "hasEmergencySupply");
-						}
-
-						/* Active scene */
-						switch ($json->data[0]->waterscene) {
-							case 'shower':
-								$sceneValue = 1;
-								break;
-							case 'heaterfilling':
-								$sceneValue = 2;
-								break;
-							case 'watering':
-								$sceneValue = 3;
-								break;
-							case 'washing':
-								$sceneValue = 4;
-								break;
-							default:
-								$sceneValue = 0;
-								break;
-						}
-						$this->updateIfNecessary($sceneValue, self::VAR_IDENT_ACTIVESCENE);
-			
-
-						/* SW Version */
-						$this->updateIfNecessary($this->getInValue($deviceData, 1), "swVersion");
-
-                        /* HW Version */
-                        $this->updateIfNecessary($this->getInValue($deviceData, 2) , "hwVersion");
-
-                        /* Device ID */
-                        $this->updateIfNecessary($this->getInValue($deviceData, 3), "deviceID");
-
-                        /* Service Info*/
-                        $infoService = explode (':', $this->getInValue($deviceData, 7));
-                        $this->updateIfNecessary((int) $infoService[0], "nextService");
-                        $this->updateIfNecessary((int) $infoService[1], "totalService");
-
-                        /* Total water*/
-						$this->updateIfNecessary($this->getInValue($deviceData, 8), "totalWater");
-
-						/* Count regeneration */
-                        $this->updateIfNecessary($this->getInValue($deviceData, 791, 3031), "totalRegeneration");
-
-						/* Salt Info*/
-						$saltInfo = explode(':', $this->getInValue($deviceData, 94));
-
-						$SaltLevel = $saltInfo[0] / 1000; //Salzgewicht in kg
-						$SaltLevelPercent = (int) (2 * $SaltLevel);
-                        $SaltRange = $saltInfo[1]; //Salzreichweite in Tagen
-						$this->updateIfNecessary($SaltLevelPercent, self::VAR_IDENT_RANGESALTPERCENT);
-						$this->updateIfNecessary(round($SaltLevel), self::VAR_IDENT_SALTLEVEL);
-						$this->updateIfNecessary($SaltRange, self::VAR_IDENT_RANGESALTDAYS);
-
-                        /* Input hardness */
-						$this->updateIfNecessary($this->getInValue($deviceData, 790, 26), "inputHardness");
-
-						/* currentFlow */
-						$this->updateIfNecessary($this->getInValue($deviceData, 790, 1617), self::VAR_IDENT_CURRENTFLOW);
-
-                        //Wasserstop-Daten
-						/* water stop */
-                        $leckageschutzStatusflag = $this->getInValue($deviceData, 792, 0);
-                        if (strlen($leckageschutzStatusflag) === 8) {
-                            $wasserstop = (boolean) $leckageschutzStatusflag[0];
-                        } else {
-                            $wasserstop = false;
-                        }
-                        $this->updateIfNecessary($wasserstop, self::VAR_IDENT_WATERSTOP);
-
-                        //Urlaub
-                        $wsUrlaub = str_pad(decbin($this->getInValue($deviceData, 792, 18)), 8, '0', STR_PAD_LEFT);
-
-                        $urlaubsmodusSelectValue = 0;
-                        switch ('1') {
-                            case $wsUrlaub[6]:
-                                $urlaubsmodusSelectValue = 1;
-                                break;
-                            case $wsUrlaub[5]:
-                                $urlaubsmodusSelectValue = 2;
-                                break;
-                            case $wsUrlaub[4]:
-                                $urlaubsmodusSelectValue = 3;
-                                break;
-                        }
-                        $this->updateIfNecessary($urlaubsmodusSelectValue, self::VAR_IDENT_WATERSTOP_HOLIDAYMODE);
-
-                        //Sleepmoduszeit
-                        $sleepmodusZeit = $this->getInValue($deviceData, 792, 19);
-                        if ($sleepmodusZeit < 1 || $sleepmodusZeit > 10){
-                            $sleepmodusZeit = 1;
-                        }
-                        $this->updateIfNecessary($sleepmodusZeit, self::VAR_IDENT_WATERSTOP_SLEEPMODEDURATION);
-
-                        //Max Durchfluss
-                        $maxDurchfluss = $this->getInValue($deviceData, 792, 1213);
-                        if ($maxDurchfluss > 5000) {
-                            $maxDurchfluss = 0;
-                        }
-                        $this->updateIfNecessary($maxDurchfluss, self::VAR_IDENT_WATERSTOP_MAXWATERFLOW);
-
-                        //Max Entnahmemenge
-                        $maxMenge = $this->getInValue($deviceData, 792, 1415);
-                        if ($maxMenge > 3000) {
-                            $maxMenge = 0;
-                        }
-                        $this->updateIfNecessary($maxMenge, self::VAR_IDENT_WATERSTOP_MAXQUANTITY);
-
-                        //Max Entnahmezeit
-                        $maxZeit = $this->getInValue($deviceData, 792, 1617);
-                        if ($maxZeit > 600) {
-                            $maxZeit = 0;
-                        }
-                        $this->updateIfNecessary($maxZeit, self::VAR_IDENT_WATERSTOP_MAXPERIODOFUSE);
-
-
-                        /* read target hardness of waterscenes */
-						$this->updateIfNecessary((int) $json->data[0]->hardness_washing, self::VAR_IDENT_HARDNESS_WASHING);
-						$this->updateIfNecessary((int) $json->data[0]->hardness_shower, self::VAR_IDENT_HARDNESS_SHOWER);
-						$this->updateIfNecessary((int) $json->data[0]->hardness_watering, self::VAR_IDENT_HARDNESS_WATERING);
-						$this->updateIfNecessary((int) $json->data[0]->hardness_heater, self::VAR_IDENT_HARDNESS_HEATER);
-						$this->updateIfNecessary((int) $json->data[0]->waterscene_normal, self::VAR_IDENT_HARDNESS_NORMAL);
-
-                        /* read times of waterscenes */
-                        if (isset($json->data[0]->waterscene_time)){
-                            $this->updateIfNecessary((int) $json->data[0]->waterscene_time, self::VAR_IDENT_TIME_SHOWER);
-                        }
-                        if (isset($json->data[0]->waterscene_time_garden)){
-                            $this->updateIfNecessary((int) $json->data[0]->waterscene_time_garden, self::VAR_IDENT_TIME_WATERING);
-                        }
-                        if (isset($json->data[0]->waterscene_time_heater)){
-                            $this->updateIfNecessary((int) $json->data[0]->waterscene_time_heater, self::VAR_IDENT_TIME_HEATER);
-                        }
-                        if (isset($json->data[0]->waterscene_time_washing)){
-                            $this->updateIfNecessary((int) $json->data[0]->waterscene_time_washing, self::VAR_IDENT_TIME_WASHING);
+                        /* Battery runtime */
+                        if (count($batteryValues) > 1){
+                            $batteryRuntime = sprintf('%d:%02d:%02d', (int) $batteryValues[3], (int) $batteryValues[2],  (int) $batteryValues[1]);
+                            $this->updateIfNecessary($batteryRuntime, self::VAR_IDENT_BATTERYRUNTIME);
                         }
 
-						/* read target hardness */
-                        $this->updateIfNecessary($this->getInValue($deviceData, 790, 8), "targetHardness");
+                    }
+                    else{
+                        $this->updateIfNecessary(false, "hasEmergencySupply");
+                    }
 
-                        /*
-                        echo sprintf('8 - Anzeige resthärte: %s', $this->getInValue($this->deviceData, 790, 8)) . PHP_EOL;
-                        echo sprintf('10 - Anzeige rohhärte / aktuelle Rohwasserhärte: %s', $this->getInValue($this->deviceData, 790, 10)) . PHP_EOL;
-                        echo sprintf('26 - Anzeige rohhärte / Rohwasserhärte1 in °dH: %s', $this->getInValue($this->deviceData, 790, 26)) . PHP_EOL;
-                        echo sprintf('1617 - Wasserdurchfluss: %s', $this->getInValue($this->deviceData, 790, 1617)) . PHP_EOL;
-                        */
-
-						/* Remaining time of active water scene */
-						if($this->GetValue(self::VAR_IDENT_ACTIVESCENE) !== 0)
-						{
-							if($json->data[0]->disable_time !== '')
-							{
-								$remainingTime = (((int)$json->data[0]->disable_time - time()) / 60) + 1;
-								$this->updateIfNecessary(max((int) $remainingTime, 0), "remainingTime");
-							}
-							else
-							{
-								$this->updateIfNecessary(0, "remainingTime");
-								$this->updateIfNecessary(0, self::VAR_IDENT_ACTIVESCENE);
-							}
-
-						}
-						else
-						{
-							$this->updateIfNecessary(0, "remainingTime");
-						}
-						
+                    /* Active scene */
+                    switch ($json->data[0]->waterscene) {
+                        case 'shower':
+                            $sceneValue = 1;
+                            break;
+                        case 'heaterfilling':
+                            $sceneValue = 2;
+                            break;
+                        case 'watering':
+                            $sceneValue = 3;
+                            break;
+                        case 'washing':
+                            $sceneValue = 4;
+                            break;
+                        default:
+                            $sceneValue = 0;
+                            break;
+                    }
+                    $this->updateIfNecessary($sceneValue, self::VAR_IDENT_ACTIVESCENE);
 
 
-					}
-					else
-					{
-						/* Token not valid -> try to log in again one time and wait for next RefreshData! */
-						$this->Login();
-					}
-					
-				}
-			}
+                    /* SW Version */
+                    $this->updateIfNecessary($this->getInValue($deviceData, 1), "swVersion");
+
+                    /* HW Version */
+                    $this->updateIfNecessary($this->getInValue($deviceData, 2) , "hwVersion");
+
+                    /* Device ID */
+                    $this->updateIfNecessary($this->getInValue($deviceData, 3), "deviceID");
+
+                    /* Service Info*/
+                    $infoService = explode (':', $this->getInValue($deviceData, 7));
+                    $this->updateIfNecessary((int) $infoService[0], "nextService");
+                    $this->updateIfNecessary((int) $infoService[1], "totalService");
+
+                    /* Total water*/
+                    $this->updateIfNecessary($this->getInValue($deviceData, 8), "totalWater");
+
+                    /* Count regeneration */
+                    $this->updateIfNecessary($this->getInValue($deviceData, 791, 3031), "totalRegeneration");
+
+                    /* Salt Info*/
+                    $saltInfo = explode(':', $this->getInValue($deviceData, 94));
+
+                    $SaltLevel = $saltInfo[0] / 1000; //Salzgewicht in kg
+                    $SaltLevelPercent = (int) (2 * $SaltLevel);
+                    $SaltRange = $saltInfo[1]; //Salzreichweite in Tagen
+                    $this->updateIfNecessary($SaltLevelPercent, self::VAR_IDENT_RANGESALTPERCENT);
+                    $this->updateIfNecessary(round($SaltLevel), self::VAR_IDENT_SALTLEVEL);
+                    $this->updateIfNecessary($SaltRange, self::VAR_IDENT_RANGESALTDAYS);
+
+                    /* Input hardness */
+                    $this->updateIfNecessary($this->getInValue($deviceData, 790, 26), "inputHardness");
+
+                    /* currentFlow */
+                    $this->updateIfNecessary($this->getInValue($deviceData, 790, 1617), self::VAR_IDENT_CURRENTFLOW);
+
+                    //Wasserstop-Daten
+                    /* water stop */
+                    $leckageschutzStatusflag = $this->getInValue($deviceData, 792, 0);
+                    if (strlen($leckageschutzStatusflag) === 8) {
+                        $wasserstop = (boolean) $leckageschutzStatusflag[0];
+                    } else {
+                        $wasserstop = false;
+                    }
+                    $this->updateIfNecessary($wasserstop, self::VAR_IDENT_WATERSTOP);
+
+                    //Urlaub
+                    $wsUrlaub = str_pad(decbin($this->getInValue($deviceData, 792, 18)), 8, '0', STR_PAD_LEFT);
+
+                    $urlaubsmodusSelectValue = 0;
+                    switch ('1') {
+                        case $wsUrlaub[6]:
+                            $urlaubsmodusSelectValue = 1;
+                            break;
+                        case $wsUrlaub[5]:
+                            $urlaubsmodusSelectValue = 2;
+                            break;
+                        case $wsUrlaub[4]:
+                            $urlaubsmodusSelectValue = 3;
+                            break;
+                    }
+                    $this->updateIfNecessary($urlaubsmodusSelectValue, self::VAR_IDENT_WATERSTOP_HOLIDAYMODE);
+
+                    //Sleepmoduszeit
+                    $sleepmodusZeit = $this->getInValue($deviceData, 792, 19);
+                    if ($sleepmodusZeit < 1 || $sleepmodusZeit > 10){
+                        $sleepmodusZeit = 1;
+                    }
+                    $this->updateIfNecessary($sleepmodusZeit, self::VAR_IDENT_WATERSTOP_SLEEPMODEDURATION);
+
+                    //Max Durchfluss
+                    $maxDurchfluss = $this->getInValue($deviceData, 792, 1213);
+                    if ($maxDurchfluss > 5000) {
+                        $maxDurchfluss = 0;
+                    }
+                    $this->updateIfNecessary($maxDurchfluss, self::VAR_IDENT_WATERSTOP_MAXWATERFLOW);
+
+                    //Max Entnahmemenge
+                    $maxMenge = $this->getInValue($deviceData, 792, 1415);
+                    if ($maxMenge > 3000) {
+                        $maxMenge = 0;
+                    }
+                    $this->updateIfNecessary($maxMenge, self::VAR_IDENT_WATERSTOP_MAXQUANTITY);
+
+                    //Max Entnahmezeit
+                    $maxZeit = $this->getInValue($deviceData, 792, 1617);
+                    if ($maxZeit > 600) {
+                        $maxZeit = 0;
+                    }
+                    $this->updateIfNecessary($maxZeit, self::VAR_IDENT_WATERSTOP_MAXPERIODOFUSE);
+
+
+                    /* read target hardness of waterscenes */
+                    $this->updateIfNecessary((int) $json->data[0]->hardness_washing, self::VAR_IDENT_HARDNESS_WASHING);
+                    $this->updateIfNecessary((int) $json->data[0]->hardness_shower, self::VAR_IDENT_HARDNESS_SHOWER);
+                    $this->updateIfNecessary((int) $json->data[0]->hardness_watering, self::VAR_IDENT_HARDNESS_WATERING);
+                    $this->updateIfNecessary((int) $json->data[0]->hardness_heater, self::VAR_IDENT_HARDNESS_HEATER);
+                    $this->updateIfNecessary((int) $json->data[0]->waterscene_normal, self::VAR_IDENT_HARDNESS_NORMAL);
+
+                    /* read times of waterscenes */
+                    if (isset($json->data[0]->waterscene_time)){
+                        $this->updateIfNecessary((int) $json->data[0]->waterscene_time, self::VAR_IDENT_TIME_SHOWER);
+                    }
+                    if (isset($json->data[0]->waterscene_time_garden)){
+                        $this->updateIfNecessary((int) $json->data[0]->waterscene_time_garden, self::VAR_IDENT_TIME_WATERING);
+                    }
+                    if (isset($json->data[0]->waterscene_time_heater)){
+                        $this->updateIfNecessary((int) $json->data[0]->waterscene_time_heater, self::VAR_IDENT_TIME_HEATER);
+                    }
+                    if (isset($json->data[0]->waterscene_time_washing)){
+                        $this->updateIfNecessary((int) $json->data[0]->waterscene_time_washing, self::VAR_IDENT_TIME_WASHING);
+                    }
+
+                    /* read target hardness */
+                    $this->updateIfNecessary($this->getInValue($deviceData, 790, 8), "targetHardness");
+
+                    /*
+                    echo sprintf('8 - Anzeige resthärte: %s', $this->getInValue($this->deviceData, 790, 8)) . PHP_EOL;
+                    echo sprintf('10 - Anzeige rohhärte / aktuelle Rohwasserhärte: %s', $this->getInValue($this->deviceData, 790, 10)) . PHP_EOL;
+                    echo sprintf('26 - Anzeige rohhärte / Rohwasserhärte1 in °dH: %s', $this->getInValue($this->deviceData, 790, 26)) . PHP_EOL;
+                    echo sprintf('1617 - Wasserdurchfluss: %s', $this->getInValue($this->deviceData, 790, 1617)) . PHP_EOL;
+                    */
+
+                    /* Remaining time of active water scene */
+                    if($this->GetValue(self::VAR_IDENT_ACTIVESCENE) !== 0)
+                    {
+                        if($json->data[0]->disable_time !== '')
+                        {
+                            $remainingTime = (((int)$json->data[0]->disable_time - time()) / 60) + 1;
+                            $this->updateIfNecessary(max((int) $remainingTime, 0), "remainingTime");
+                        }
+                        else
+                        {
+                            $this->updateIfNecessary(0, "remainingTime");
+                            $this->updateIfNecessary(0, self::VAR_IDENT_ACTIVESCENE);
+                        }
+
+                    }
+                    else
+                    {
+                        $this->updateIfNecessary(0, "remainingTime");
+                    }
+
+
+
+                }
+                else
+                {
+                    /* Token not valid -> try to log in again one time and wait for next RefreshData! */
+                    $this->Login();
+                }
+
+            }
 			catch(Exception $e){
 				$this->SendDebug(__FUNCTION__, 'Error during data crawling: '. $e->getMessage(), 0);
 			}
 
-			
+			return true;
 		
-			//$this->Send('GET', $loginUrl, '', 5000);
-
-			//IPS_LogMessage($_IPS['SELF'], 'RefreshData() called! Username: '. $username . 'PW: ' . $passwd . 'URL: ' . $loginUrl);
 		}
 
-		public function Login(): void
+		private function Login(): bool
         {
 
 			$wc = new WebClient();
@@ -599,32 +592,32 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			if ($response === FALSE) 
 			{
 				$this->SetStatus(201);
+                return false;
 			}
-			else 
-			{
-				$json = json_decode($response, false);
-				if (isset($json->status) && $json->status === 'ok')
-				{
-					$this->SendDebug(__FUNCTION__, 'Login successful, Token: '. $json->token, 0);
-					$this->WriteAttributeString(self::ATTR_ACCESSTOKEN, $json->token);
-					$this->SetStatus(IS_ACTIVE);
-					
-					$refreshRate = $this->ReadPropertyInteger("RefreshRate");
-					$this->SetTimerInterval("RefreshTimer", $refreshRate * 1000);
-				}
-				else
-				{
-					$this->SendDebug(__FUNCTION__, 'Login failed!', 0);
-					$this->SetStatus(201);
-					$this->SetTimerInterval("RefreshTimer", 0);
-				}
-			}
-		
+
+            $json = json_decode($response, false);
+            if (isset($json->status) && $json->status === 'ok')
+            {
+                $this->SendDebug(__FUNCTION__, 'Login successful, Token: '. $json->token, 0);
+                $this->WriteAttributeString(self::ATTR_ACCESSTOKEN, $json->token);
+                $this->SetStatus(IS_ACTIVE);
+
+                $refreshRate = $this->ReadPropertyInteger("RefreshRate");
+                $this->SetTimerInterval("RefreshTimer", $refreshRate * 1000);
+            }
+            else
+            {
+                $this->SendDebug(__FUNCTION__, 'Login failed!', 0);
+                $this->SetStatus(201);
+                $this->SetTimerInterval("RefreshTimer", 0);
+            }
+
+            return true;
 		}
 
-		public function TestConnection(): void
+		public function TestConnection(): bool
 		{
-			$this->Login();
+			return $this->Login();
 		}
 
         /*

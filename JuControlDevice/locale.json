@@ -59,7 +59,9 @@
             "Water scene time 'Garden irrigation'": "Wasserszenendauer 'Gartenbewässerung'",
             "Water scene time 'Filling of heating'": "Wasserszenendauer 'Heizungsbefüllung'",
             "Water scene time 'Washing'": "Wasserszenendauer 'Waschen'",
-            "Remaining time scene": "Restlaufzeit Szene"
+            "Remaining time scene": "Restlaufzeit Szene",
+            "Error!": "Fehlgeschlagen!",
+            "Success!": "Erfolgreich!"
         }
     }
 }

@@ -15,7 +15,7 @@ Beschreibung des Moduls.
 
 * Stellt die Verbindung zur Judo i-soft safe Wasserenthärtungsanlage her. Die Verbindung läuft über die API des Hersteller (myjudo) mittels Benutzername und Passwort. Aktuell wird nur eine Anlage pro Nutzeraccount unterstützt. Bei mehreren eingerichteten Anlagen kann es zu Fehlfunktionen kommen.
 
-### 2. Vorraussetzungen
+### 2. Voraussetzungen
 
 - IP-Symcon ab Version 5.5
 
@@ -31,15 +31,11 @@ Beschreibung des Moduls.
 
 __Konfigurationsseite__:
 
-| Eigenschaft | Bezeichnung     		    | Beschreibung                                |
-|-------------|-----------------------|---------------------------------------------|
-| Username    | Benutzername        	 | Benutzername des myjudo-Accounts            |
-| Password    | Passwort      		      | zugehöriges Benutzerpasswort                |
+| Eigenschaft | Bezeichnung     		    | Beschreibung                         |
+|-------------|-----------------------|--------------------------------------|
+| Username    | Benutzername        	 | Benutzername des myjudo-Accounts     |
+| Password    | Passwort      		      | zugehöriges Benutzerpasswort         |
 | RefreshRate | Refreshrate		         | Aktualisierungsintervall in Sekunden |
-| TimeShower  | Time Shower		         | Wasserszenen Zeit Duschen                   |
-| TimeHeating | Time Heating		        | Wasserszenen Zeit Heizungsfüllung           |
-| TimeWatering| Time Watering		       | Wasserszenen Zeit Bewässerung               |
-| TimeWashing | Time Washing		        | Wasserszenen Zeit Waschen                   |
 
 ### 5. Statusvariablen und Profile
 
@@ -58,7 +54,7 @@ Die Statusvariablen/Kategorien werden automatisch angelegt. Das Löschen einzeln
 | Füllstand Salz	                |       | Integer	  |                                 |
 | Aktueller Durchfluss           |       | Integer	  |                                 |
 | Batteriezustand Notstrommodul  |       | Integer	  |                                 |
-| Aktive Wasserszene	          |       | Integer	  |                                 |
+| Aktive Wasserszene	            |       | Integer	  |                                 |
 | SW-Version			                  |       | String	   | Sofware Version Gerätesteuerung |
 | HW-Version			                  |       | String	   |                                 |
 | CCU-Version			                 |       | String	   |                                 |
@@ -76,8 +72,8 @@ Die Statusvariablen/Kategorien werden automatisch angelegt. Das Löschen einzeln
 
 #### Profile
 
-Name   | Typ
------- | -------
+| Name | Typ |
+|------|-----|
        |
        |
 
