@@ -20,12 +20,12 @@
     "actions": [
         {
             "type": "Button",
-            "caption": "Test Connection!",
+            "caption": "Test Connection",
             "onClick": "$module = new IPSModule($id); $ret = JCD_TestConnection($id); if (!$ret) {echo $module->Translate('Error!');} else {echo $module->Translate('Success!');}"
         },
         {
             "type": "Button",
-            "caption": "Update values!",
+            "caption": "Update values",
             "onClick": "$module = new IPSModule($id); $ret = JCD_RefreshData($id); if (!$ret) {echo $module->Translate('Error!');} else {echo $module->Translate('Success!');}"
         }
     ],
