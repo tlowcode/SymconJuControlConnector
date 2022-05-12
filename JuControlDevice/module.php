@@ -17,6 +17,8 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
         private const VAR_IDENT_BATTERYRUNTIME = 'batteryRuntime';
         private const VAR_IDENT_CURRENTFLOW = 'currentFlow';
         private const VAR_IDENT_WATERSTOP = 'waterStop';
+        private const VAR_IDENT_SLEEPMODE                = 'sleepMode';
+        private const VAR_IDENT_HOLIDAY                  = 'holiday';
         private const VAR_IDENT_WATERSTOP_MAXPERIODOFUSE = 'wsMaxPeriodOfUse';
         private const VAR_IDENT_WATERSTOP_MAXQUANTITY = 'wsMaxQuantity';
         private const VAR_IDENT_WATERSTOP_MAXWATERFLOW = 'wsMaxWaterFlow';
@@ -109,9 +111,15 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
             $this->EnableAction(self::VAR_IDENT_WATERSTOP_MAXQUANTITY);
             $this->RegisterVariableInteger(self::VAR_IDENT_WATERSTOP_MAXWATERFLOW, $this->Translate('Max. Water Flow'), 'JCD.lph.WSMaxWaterFlow', ++$position);
             $this->EnableAction(self::VAR_IDENT_WATERSTOP_MAXWATERFLOW);
-            $this->RegisterVariableInteger(self::VAR_IDENT_WATERSTOP_HOLIDAYMODE, $this->Translate('Holiday Mode'), 'JCD.WSHolidayMode', ++$position);
+            $this->RegisterVariableInteger(self::VAR_IDENT_WATERSTOP_HOLIDAYMODE, $this->Translate('Holiday mode'), 'JCD.WSHolidayMode', ++$position);
             $this->EnableAction(self::VAR_IDENT_WATERSTOP_HOLIDAYMODE);
-            $this->RegisterVariableInteger(self::VAR_IDENT_WATERSTOP_SLEEPMODEDURATION, $this->Translate('Sleep Mode Duration'), 'JCD.Hours', ++$position);
+
+            $this->RegisterVariableBoolean(self::VAR_IDENT_HOLIDAY, $this->Translate('Holiday'), '~Switch', ++$position);
+            $this->EnableAction(self::VAR_IDENT_HOLIDAY);
+
+            $this->RegisterVariableBoolean(self::VAR_IDENT_SLEEPMODE, $this->Translate('Sleep mode'), '~Switch', ++$position);
+            $this->EnableAction(self::VAR_IDENT_SLEEPMODE);
+            $this->RegisterVariableInteger(self::VAR_IDENT_WATERSTOP_SLEEPMODEDURATION, $this->Translate('Sleep mode duration'), 'JCD.Hours', ++$position);
             $this->EnableAction(self::VAR_IDENT_WATERSTOP_SLEEPMODEDURATION);
 
             $this->RegisterVariableInteger(self::VAR_IDENT_BATTERYSTATE, $this->Translate('Battery status'), '~Intensity.100', ++$position);
@@ -240,6 +248,24 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                 case self::VAR_IDENT_WATERSTOP:
                     if ($Value){
                        $command = "write%20data&dt=0x33&index=72&data=&da=0x1";
+                   } else {
+                       $command = "write%20data&dt=0x33&index=73&data=&da=0x1";
+                   }
+                   $strSerialnumber = '&serial_number=';
+                   break;
+
+                case self::VAR_IDENT_SLEEPMODE:
+                    if ($Value){
+                       $command = "write%20data&dt=0x33&index=171&data=&da=0x1";
+                   } else {
+                       $command = "write%20data&dt=0x33&index=73&data=&da=0x1";
+                   }
+                   $strSerialnumber = '&serial_number=';
+                   break;
+
+                case self::VAR_IDENT_HOLIDAY:
+                    if ($Value){
+                       $command = "write%20data&dt=0x33&index=77&data=&da=0x1";
                    } else {
                        $command = "write%20data&dt=0x33&index=73&data=&da=0x1";
                    }
@@ -425,8 +451,12 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 
                     /* Service Info*/
                     $infoService = explode (':', $this->getInValue($deviceData, 7));
-                    $this->updateIfNecessary((int) $infoService[0], "nextService");
-                    $this->updateIfNecessary((int) $infoService[1], "totalService");
+                    if (isset($infoService[0])){
+                        $this->updateIfNecessary((int) $infoService[0], "nextService");
+                    }
+                    if (isset($infoService[1])) {
+                        $this->updateIfNecessary((int)$infoService[1], "totalService");
+                    }
 
                     /* Total water*/
                     $this->updateIfNecessary($this->getInValue($deviceData, 8), "totalWater");
@@ -459,6 +489,12 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                         $wasserstop = false;
                     }
                     $this->updateIfNecessary($wasserstop, self::VAR_IDENT_WATERSTOP);
+
+                    //Sleepmodus
+                    $standbyMode = $this->getInValue($deviceData, 792, 9);
+                    $this->SendDebug(__FUNCTION__, 'standbysmode: '. $standbyMode, 0);
+
+                    $this->updateIfNecessary($standbyMode > 0, self::VAR_IDENT_SLEEPMODE);
 
                     //Urlaub
                     $wsUrlaub = str_pad(decbin($this->getInValue($deviceData, 792, 18)), 8, '0', STR_PAD_LEFT);
@@ -805,11 +841,13 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 
                                 // Wasserstop statusflag
                                 case 0:
-                                    $standby = intval(substr($data, $subIndex, 2),16);
+                                    $standby = intval(substr($data, $subIndex *2, 2),16);
                                     $standbyBinary = decbin($standby);
                                     $value = $standbyBinary;
                                     break;
 
+
+                                case 9: // Standby Modus - gibt Stunden zurück
                                 case 18: // eingestellter Urlaubsmodus
                                 case 19: // eingestellte Sleepmoduszeit
                                     $value = intval(substr($data, $subIndex *2, 2), 16);
@@ -835,6 +873,9 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                                     $maxZeitHigh = substr($data, 34, 2);
                                     $value = intval($maxZeitHigh . $maxZeitLow, 16);
                                     break;
+
+                                default:
+                                    trigger_error(sprintf('%s: index %s: invalid subindex (%s)', __FUNCTION__, $index, $subIndex), E_USER_ERROR);
 
                             }
                         }
