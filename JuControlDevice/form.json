@@ -1,63 +1,36 @@
 {
     "elements": [
         {
-            "type": "ExpansionPanel",
-            "caption": "Basic Settings",
-            "items": [
-                {
-                    "name": "Username",
-                    "type": "ValidationTextBox",
-                    "caption": "Username"
-                },
-                {
-                    "name": "Password",
-                    "type": "PasswordTextBox",
-                    "caption": "Password"
-                },
-                {
-                    "name": "RefreshRate",
-                    "type": "ValidationTextBox",
-                    "caption": "Refresh Rate"
-                },
-                {
-                    "name": "TimeShower",
-                    "type": "ValidationTextBox",
-                    "caption": "Water scene 'Shower' duration"
-                },
-                {
-                    "name": "TimeHeating",
-                    "type": "ValidationTextBox",
-                    "caption": "Water scene 'Heating' duration"
-                },
-                {
-                    "name": "TimeWatering",
-                    "type": "ValidationTextBox",
-                    "caption": "Water scene 'Watering' duration"
-                },
-                {
-                    "name": "TimeWashing",
-                    "type": "ValidationTextBox",
-                    "caption": "Water scene 'Washing' duration"
-                }
-            ]
+            "name": "Username",
+            "type": "ValidationTextBox",
+            "caption": "Username"
+        },
+        {
+            "name": "Password",
+            "type": "PasswordTextBox",
+            "caption": "Password"
+        },
+        {
+            "name": "RefreshRate",
+            "type": "NumberSpinner",
+            "minimum": 0,
+            "caption": "Refresh Rate in Seconds"
         }
     ],
     "actions": [
         {
             "type": "Button",
-            "caption": "Test Connection!",
-            "onClick": "JCD_TestConnection($id);"
+            "caption": "Test Connection",
+            "onClick": "$module = new IPSModule($id); $ret = JCD_TestConnection($id); if (!$ret) {echo $module->Translate('Error!');} else {echo $module->Translate('Success!');}"
         },
         {
             "type": "Button",
-            "caption": "Update values!",
-            "onClick": "JCD_RefreshData($id);"
+            "caption": "Update values",
+            "onClick": "$module = new IPSModule($id); $ret = JCD_RefreshData($id); if (!$ret) {echo $module->Translate('Error!');} else {echo $module->Translate('Success!');}"
         }
     ],
     "status":
     [
-        { "code": 102, "icon": "active", "caption": "Login information valid!" },
-        { "code": 104, "icon": "inactive", "caption": "Instance is inactive!" },
         { "code": 201, "icon": "error", "caption": "Authentication failed!" },
         { "code": 202, "icon": "error", "caption": "Wrong device type found!" }
     ]
