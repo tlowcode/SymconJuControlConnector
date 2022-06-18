@@ -580,26 +580,6 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                         {
                             $remainingTime = (((int)$json->data[0]->disable_time - time()) / 60) + 1;
                             $this->updateIfNecessary(max((int) $remainingTime, 0), "remainingTime");
-							/* update target hardness due to active waterscene */
-							switch ($this->GetValue(self::VAR_IDENT_ACTIVESCENE) {
-								case '1':
-									$this->updateIfNecessary((int) $json->data[0]->hardness_shower, "targetHardness");
-									break;
-								case '2':
-									$this->updateIfNecessary((int) $json->data[0]->hardness_heater, "targetHardness");
-									break;
-								case '3':
-									$this->updateIfNecessary((int) $json->data[0]->hardness_watering, "targetHardness");
-									break;
-								case '4':
-									$this->updateIfNecessary((int) $json->data[0]->hardness_washing, "targetHardness");
-									break;
-								
-								default:
-									/* nothing to do */
-									break;
-							}
-							
 
                         }
                         else
