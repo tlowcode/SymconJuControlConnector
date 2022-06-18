@@ -596,7 +596,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 									break;
 								
 								default:
-									# nothing to do
+									/* nothing to do */
 									break;
 							}
 							
