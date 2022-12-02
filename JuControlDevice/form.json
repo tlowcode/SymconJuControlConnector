@@ -1,0 +1,37 @@
+{
+    "elements": [
+        {
+            "name": "Username",
+            "type": "ValidationTextBox",
+            "caption": "Username"
+        },
+        {
+            "name": "Password",
+            "type": "PasswordTextBox",
+            "caption": "Password"
+        },
+        {
+            "name": "RefreshRate",
+            "type": "NumberSpinner",
+            "minimum": 0,
+            "caption": "Refresh Rate in Seconds"
+        }
+    ],
+    "actions": [
+        {
+            "type": "Button",
+            "caption": "Test Connection",
+            "onClick": "$module = new IPSModule($id); $ret = JCD_TestConnection($id); if (!$ret) {echo $module->Translate('Error!');} else {echo $module->Translate('Success!');}"
+        },
+        {
+            "type": "Button",
+            "caption": "Update values",
+            "onClick": "$module = new IPSModule($id); $ret = JCD_RefreshData($id); if (!$ret) {echo $module->Translate('Error!');} else {echo $module->Translate('Success!');}"
+        }
+    ],
+    "status":
+    [
+        { "code": 201, "icon": "error", "caption": "Authentication failed!" },
+        { "code": 202, "icon": "error", "caption": "Wrong device type found!" }
+    ]
+}
