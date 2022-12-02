@@ -1,0 +1,12 @@
+{
+    "id": "{33990A95-A7B4-2E3D-3436-FEE9AF323594}",
+    "name": "JuControlConnector",
+    "author": "tlowcode/bumaas",
+    "url": "",
+    "compatibility": {
+        "version": "5.5"
+    },
+    "version": "1.1",
+    "build": 1,
+    "date": 2122022
+}
