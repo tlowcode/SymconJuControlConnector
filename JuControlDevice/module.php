@@ -37,6 +37,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
         private const VAR_IDENT_TIME_SHOWER       = 'Time_Shower';
         private const VAR_IDENT_TIME_HEATER   = 'Time_Heater';
         private const VAR_IDENT_TIME_WATERING = 'Time_Watering';
+        private const VAR_IDENT_REGENERATION = 'Regeneration';
 
         private const URL = 'https://www.myjudo.eu';
 
@@ -137,6 +138,9 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
             $this->RegisterVariableBoolean("hasEmergencySupply", $this->Translate('Safety-Modul'), "JCD.NoYes", ++$position);
 
 			$this->RegisterVariableInteger("totalWater", $this->Translate('Total water quantity'), "JCD.Liter", ++$position);
+            $this->RegisterVariableBoolean(self::VAR_IDENT_REGENERATION, $this->Translate('Regeneration'), '~Switch', ++$position);
+            $this->EnableAction(self::VAR_IDENT_REGENERATION);
+
 			$this->RegisterVariableInteger("totalRegeneration", $this->Translate('Total regeneration rate'), "", ++$position);
 			$this->RegisterVariableInteger("totalService", $this->Translate('Number of services'), "", ++$position);
 
@@ -152,13 +156,13 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			$this->EnableAction(self::VAR_IDENT_HARDNESS_SHOWER);
 
             $this->RegisterVariableInteger(self::VAR_IDENT_TIME_WASHING, $this->Translate('Water scene time \'Washing\''), 'JCD.Hours', ++$position);
-            //$this->EnableAction(self::VAR_IDENT_TIME_WASHING);
+            $this->EnableAction(self::VAR_IDENT_TIME_WASHING);
             $this->RegisterVariableInteger(self::VAR_IDENT_TIME_HEATER, $this->Translate('Water scene time \'Filling of heating\''), 'JCD.Hours', ++$position);
-            //$this->EnableAction(self::VAR_IDENT_TIME_HEATER);
+            $this->EnableAction(self::VAR_IDENT_TIME_HEATER);
             $this->RegisterVariableInteger(self::VAR_IDENT_TIME_WATERING, $this->Translate('Water scene time \'Garden irrigation\''), 'JCD.Hours', ++$position);
-            //$this->EnableAction(self::VAR_IDENT_TIME_WATERING);
+            $this->EnableAction(self::VAR_IDENT_TIME_WATERING);
             $this->RegisterVariableInteger(self::VAR_IDENT_TIME_SHOWER, $this->Translate('Water scene time \'Shower\''), 'JCD.Hours', ++$position);
-            //$this->EnableAction(self::VAR_IDENT_TIME_SHOWER);
+            $this->EnableAction(self::VAR_IDENT_TIME_SHOWER);
 
 			$this->RegisterVariableInteger("remainingTime", $this->Translate('Remaining time scene'), "JCD.Minutes", ++$position);
 
@@ -197,6 +201,26 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 					$command = "set%20waterscene%20shower";
 					$parameter = (string) $Value;
 					break;
+                case self::VAR_IDENT_TIME_WASHING:
+                    $command = "set_waterscene_time_washing";
+                    $parameter = (string) $Value;
+                    $strSerialnumber = '&serial_number=';
+                    break;
+                case self::VAR_IDENT_TIME_HEATER:
+                    $command = "set_waterscene_time_heater";
+                    $parameter = (string) $Value;
+                    $strSerialnumber = '&serial_number=';
+                    break;
+                case self::VAR_IDENT_TIME_WATERING:
+                    $command = "set_waterscene_time_garden";
+                    $parameter = (string) $Value;
+                    $strSerialnumber = '&serial_number=';
+                    break;
+                case self::VAR_IDENT_TIME_SHOWER:
+                    $command = "set_waterscene_time";
+                    $parameter = (string) $Value;
+                    $strSerialnumber = '&serial_number=';
+                    break;
                 case self::VAR_IDENT_HARDNESS_NORMAL:
 					$command = "write%20data&dt=0x33&index=60&data=". $Value . "&da=0x1&&action=normal";
 					break;
@@ -248,12 +272,20 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 
                 case self::VAR_IDENT_WATERSTOP:
                     if ($Value){
-                       $command = "write%20data&dt=0x33&index=72&data=&da=0x1";
-                   } else {
-                       $command = "write%20data&dt=0x33&index=73&data=&da=0x1";
-                   }
-                   $strSerialnumber = '&serial_number=';
-                   break;
+                        $command = "write%20data&dt=0x33&index=72&data=&da=0x1";
+                    } else {
+                        $command = "write%20data&dt=0x33&index=73&data=&da=0x1";
+                    }
+                    $strSerialnumber = '&serial_number=';
+                    break;
+
+                case self::VAR_IDENT_REGENERATION:
+                    //die Regeneration lässt sich nur einschalten, nicht ausschalten
+                    if ($Value){
+                        $command = "write%20data&dt=0x33&index=65&data=&da=0x1";
+                    }
+                    $strSerialnumber = '&serial_number=';
+                    break;
 
                 case self::VAR_IDENT_SLEEPMODE:
                     if ($Value){
@@ -463,23 +495,33 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                     $this->updateIfNecessary($this->getInValue($deviceData, 8), "totalWater");
 
                     /* Count regeneration */
-                    $this->updateIfNecessary($this->getInValue($deviceData, 791, 3031), "totalRegeneration");
+                    $totalRegeneration = $this->getInValue($deviceData, 791, 3031);
+                    if ($totalRegeneration !== ''){
+                        $this->updateIfNecessary($totalRegeneration, "totalRegeneration");
+                    }
+
+                    /* Regeneration active*/
+                    $this->updateIfNecessary($this->getInValue($deviceData, 791, 0), self::VAR_IDENT_REGENERATION);
 
                     /* Salt Info*/
-                    $saltInfo = explode(':', $this->getInValue($deviceData, 94));
-
-                    $SaltLevel = $saltInfo[0] / 1000; //Salzgewicht in kg
-                    $SaltLevelPercent = (int) (2 * $SaltLevel);
-                    $SaltRange = $saltInfo[1]; //Salzreichweite in Tagen
-                    $this->updateIfNecessary($SaltLevelPercent, self::VAR_IDENT_RANGESALTPERCENT);
-                    $this->updateIfNecessary(round($SaltLevel), self::VAR_IDENT_SALTLEVEL);
-                    $this->updateIfNecessary($SaltRange, self::VAR_IDENT_RANGESALTDAYS);
+                    $saltData = $this->getInValue($deviceData, 94);
+                    if (@strpos(':', $saltData)){ // warning if needle is empty
+                        $saltInfo = explode(':', $saltData);
+                        $SaltLevel = $saltInfo[0] / 1000; //Salzgewicht in kg
+                        $SaltLevelPercent = (int) (2 * $SaltLevel);
+                        $this->updateIfNecessary($SaltLevelPercent, self::VAR_IDENT_RANGESALTPERCENT);
+                        $this->updateIfNecessary(round($SaltLevel), self::VAR_IDENT_SALTLEVEL);
+                        $SaltRange = $saltInfo[1]; //Salzreichweite in Tagen
+                        $this->updateIfNecessary($SaltRange, self::VAR_IDENT_RANGESALTDAYS);
+                    }
 
                     /* Input hardness */
-                    $this->updateIfNecessary($this->getInValue($deviceData, 790, 26), "inputHardness");
+                    $inputHardness = $this->getInValue($deviceData, 790, 26);
+                    $this->updateIfNecessary($inputHardness, "inputHardness");
 
                     /* currentFlow */
-                    $this->updateIfNecessary($this->getInValue($deviceData, 790, 1617), self::VAR_IDENT_CURRENTFLOW);
+                    $currentFlow = $this->getInValue($deviceData, 790, 1617);
+                    $this->updateIfNecessary($currentFlow, self::VAR_IDENT_CURRENTFLOW);
 
                     /* water stop */
                     $leckageschutzStatusflag = $this->getInValue($deviceData, 792, 0);
@@ -492,6 +534,8 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 
                     //Sleepmodus
                     $standbyMode = $this->getInValue($deviceData, 792, 9);
+                    //$this->SendDebug(__FUNCTION__, 'standbymode: '. $standbyMode, KL_NOTIFY);
+
                     $this->updateIfNecessary($standbyMode > 0, self::VAR_IDENT_SLEEPMODE);
 
                     //Urlaub
@@ -760,10 +804,10 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                     break;
 
                 case 790:
-                    if (strlen($data) === 66) {
-                        if (!is_null($subIndex)) {
-                            $data = explode(':', $data)[1];
-                            switch ($subIndex) {
+                    $value = '';
+                    if ((strlen($data) === 66) && !is_null($subIndex)) {
+                        $data = explode(':', $data)[1];
+                        switch ($subIndex) {
 
                                 case 2:
                                     $value = hexdec(substr($data, 2, 2));
@@ -780,12 +824,9 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                                     $value =intval(substr($data, $subIndex*2, 2), 16);
                                     break;
 
-                                case 1617: 
-                                    $value = hexdec($this->formatEndian(substr($data, 32, 4) . '0000'));
-                                    break;
-                            }
-                        } else {
-                            $value = '';
+                            case 1617:
+                                $value = hexdec($this->formatEndian(substr($data, 32, 4) . '0000'));
+                                break;
                         }
                     }
                     break;
@@ -800,6 +841,14 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                                     $tREGANZAHL_LO = substr($data, 60,2);
                                     $tREGANZAHL_HI = substr($data, 62,2);
                                     $value = intval($tREGANZAHL_HI . $tREGANZAHL_LO, 16);
+                                    break;
+
+                                // Statusflag Betrieb/Regeneration
+                                case 0:
+                                    $flag = intval(substr($data, $subIndex *2, 2),16);
+                                    $flagBinary = decbin($flag);
+                                    $this->SendDebug(__FUNCTION__, 'get_device_data 791, 0 (Regeneration): ' . $flagBinary, KL_NOTIFY);
+                                    $value = ($flagBinary !== '') ? $flagBinary[strlen($flagBinary) - 1] : 0;
                                     break;
                             }
                         }
@@ -930,8 +979,12 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 
         private function updateIfNecessary($newValue, string $ident): void
 		{
-			if ($this->GetValue($ident) != $newValue)
-			{
+			$id = $this->GetIDForIdent($ident);
+            $variableType = IPS_GetVariable($id)['VariableType'];
+            if (in_array($variableType, [VARIABLETYPE_FLOAT, VARIABLETYPE_INTEGER]) && !is_numeric($newValue)){
+                return;
+            }
+            if ($this->GetValue($ident) != $newValue){
                 $this->SetValue($ident, $newValue);
 				$this->SendDebug(__FUNCTION__, 'Updating variable ' . $ident . ' to value: ' . $newValue, KL_NOTIFY);
 			}
