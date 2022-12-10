@@ -110,8 +110,16 @@ Beispiel:
 
 ### 8. Version-History
 
+10.12.2022
+V1.2
+- Wasserszenen-Dauer einstellbar
+- Einschalten der Regeneration ermöglicht
+- Robustheit bei unvollständigen Antworten erhöht
+
 02.12.2022
-1.1 - Code cleanup; Translations added
+V1.1 
+- Code cleanup; Translations added
 
 30.11.2022
-1.0 - Initial Release for store
+V1.0
+- Initial Release for store
