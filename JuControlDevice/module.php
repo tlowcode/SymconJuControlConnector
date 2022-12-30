@@ -505,7 +505,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 
                     /* Salt Info*/
                     $saltData = $this->getInValue($deviceData, 94);
-                    if (@strpos(':', $saltData)){ // warning if needle is empty
+                    if (@strpos($saltData, ':')){ // warning if needle is empty
                         $saltInfo = explode(':', $saltData);
                         $SaltLevel = $saltInfo[0] / 1000; //Salzgewicht in kg
                         $SaltLevelPercent = (int) (2 * $SaltLevel);
