@@ -5,6 +5,7 @@
             "Update values": "Variablen updaten",
             "Authentication failed!": "Authentifizierung fehlgeschlagen!",
             "Wrong device type found!": "Falscher Geräte-Typ erkannt!",
+            "Device is not online!": "Das Gerät ist nicht erreichbar!",
             "Username": "Benutzername",
             "Password": "Passwort",
             "Refresh Rate in Seconds": "Aktualisierungsintervall in Sekunden",

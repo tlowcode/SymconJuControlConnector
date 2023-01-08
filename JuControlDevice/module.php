@@ -8,6 +8,11 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 	class JuControlDevice extends IPSModule
 	{
 
+        //Status
+        private const STATUS_INST_AUTHENTICATION_FAILED = 201;
+        private const STATUS_INST_WRONG_DEVICETYPE  = 202;
+        private const STATUS_INST_DEVICE_NOT_ONLINE = 203;
+
         //attributes
         private const ATTR_ACCESSTOKEN = 'AccessToken';
         private const ATTR_DEVICEDATA = 'DeviceData';
@@ -397,6 +402,13 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 
                     /* Parse response */
 
+                    /* Device online */
+                    if ($json->data[0]->data[0]->status !== 'online')
+                    {
+                        $this->SetStatus(self::STATUS_INST_DEVICE_NOT_ONLINE);
+                        return false;
+                    }
+
                     /* Device Type */
                     if ($json->data[0]->data[0]->dt === '0x33')
                     {
@@ -405,9 +417,10 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                     }
                     else
                     {
-                        $this->SetStatus(202);
+                        $this->SetStatus(self::STATUS_INST_WRONG_DEVICETYPE);
                         $this->SendDebug(__FUNCTION__, 'Wrong device type (' . $json->data[0]->data[0]->dt . ') found -> Aborting!', KL_ERROR);
                         $this->SetTimerInterval("RefreshTimer", 0);
+                        return false;
                     }
 
                     /* Device S/N */
@@ -682,7 +695,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			$response = $wc->Navigate($loginUrl);
 			if ($response === FALSE) 
 			{
-				$this->SetStatus(201);
+				$this->SetStatus(self::STATUS_INST_AUTHENTICATION_FAILED);
                 return false;
 			}
 
@@ -699,7 +712,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
             else
             {
                 $this->SendDebug(__FUNCTION__, 'Login failed!', KL_ERROR);
-                $this->SetStatus(201);
+                $this->SetStatus(self::STATUS_INST_AUTHENTICATION_FAILED);
                 $this->SetTimerInterval("RefreshTimer", 0);
             }
 
