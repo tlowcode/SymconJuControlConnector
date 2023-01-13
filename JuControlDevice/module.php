@@ -403,7 +403,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                     /* Parse response */
 
                     /* Device online */
-                    if ($json->data[0]->data[0]->status !== 'online')
+                    if ($json->data[0]->status !== 'online')
                     {
                         $this->SetStatus(self::STATUS_INST_DEVICE_NOT_ONLINE);
                         return false;
