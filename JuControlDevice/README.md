@@ -13,7 +13,9 @@ Instanz der Enthärtungsanlage.
 
 ### 1. Funktionsumfang
 
-* Stellt die Verbindung zur Judo i-soft safe Wasserenthärtungsanlage her. Die Verbindung läuft über die API des Hersteller (myjudo) mittels Benutzername und Passwort. Aktuell wird nur eine Anlage pro Nutzeraccount unterstützt. Bei mehreren eingerichteten Anlagen kann es zu Fehlfunktionen kommen.
+Stellt die Verbindung zur Judo Wasserenthärtungsanlage her. Die Verbindung läuft über die API des Hersteller (myjudo) mittels Benutzername und Passwort. Aktuell werden folgende Gerätetypen unterstützt:en kann es zu Fehlfunktionen kommen.
+* Judo i-soft SAFE+
+* Judo i-soft plus
 
 ### 2. Voraussetzungen
 
@@ -21,8 +23,7 @@ Instanz der Enthärtungsanlage.
 
 ### 3. Software-Installation
 
-* Über den Module Store das 'JuControlDevice'-Modul installieren.
-* Alternativ über das Module Control folgende URL hinzufügen
+Über den Module Store das 'JuControlDevice'-Modul installieren.
 
 ### 4. Einrichten der Instanzen in IP-Symcon
 
@@ -31,11 +32,13 @@ Instanz der Enthärtungsanlage.
 
 __Konfigurationsseite__:
 
-| Eigenschaft | Bezeichnung     		    | Beschreibung                         |
-|-------------|-----------------------|--------------------------------------|
-| Username    | Benutzername        	 | Benutzername des myjudo-Accounts     |
-| Password    | Passwort      		      | zugehöriges Benutzerpasswort         |
-| RefreshRate | Refreshrate		         | Aktualisierungsintervall in Sekunden |
+| Eigenschaft            | Bezeichnung     		    | Beschreibung                                                                                             |
+|------------------------|-----------------------|----------------------------------------------------------------------------------------------------------|
+| Username               | Benutzername        	 | Benutzername des myjudo-Accounts                                                                         |
+| Password               | Passwort      		      | zugehöriges Benutzerpasswort                                                                             |
+| DeviceType             | Gerätetyp		           | Auswahl des Gerätetyps                                                                                   |
+| SerialNumber | Gerätenummer		     | Angabe der Gerätenummer. Falls keine Gerätenummer angegeben ist, wird das erste gefundene Gerät genommen |
+| RefreshRate            | Refreshrate		         | Aktualisierungsintervall in Sekunden                                                                     |
 
 ### 5. Statusvariablen und Profile
 
@@ -92,7 +95,7 @@ Die Statusvariablen/Kategorien werden automatisch angelegt. Das Löschen einzeln
 
 ### 6. WebFront
 
-Anzeige der aktuellen Betriebsdaten der Enthärtungsanlage und Möglichkeit Betriebsparameter (bspw. Wasserszene, Resthärten, ...) zu verändern.
+Anzeige der aktuellen Betriebsdaten der Enthärtungsanlage und Möglichkeit Betriebsparameter (bspw. Wasserszene, Resthärten, ...) zu verändern (zur Zeit nur i-soft SAFE+).
 
 ### 7. PHP-Befehlsreferenz
 
@@ -109,6 +112,10 @@ Beispiel:
 `JCD_RefreshData(12345);`
 
 ### 8. Version-History
+20.01.2023
+V1.3
+- Unterstützung mehrerer angemeldeter Geräte
+- Unterstützung des Gerätetyps 'i-soft plus'
 
 10.12.2022
 V1.2

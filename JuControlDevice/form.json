@@ -11,6 +11,21 @@
             "caption": "Password"
         },
         {
+            "name": "DeviceType",
+            "type": "Select",
+            "caption": "Device Type",
+            "options": [
+                { "caption": "Please select device type", "value": "" },
+                { "caption": "i-soft SAFE+", "value": "0x33" },
+                { "caption": "i-soft plus", "value": "i-soft plus" }
+            ]
+        },
+        {
+            "name": "SerialNumber",
+            "type": "ValidationTextBox",
+            "caption": "Serial Number"
+        },
+        {
             "name": "RefreshRate",
             "type": "NumberSpinner",
             "minimum": 0,
@@ -33,6 +48,8 @@
     [
         { "code": 201, "icon": "error", "caption": "Authentication failed!" },
         { "code": 202, "icon": "error", "caption": "Wrong device type found!" },
-        { "code": 203, "icon": "error", "caption": "Device is not online!" }
+        { "code": 203, "icon": "error", "caption": "Device is not online!" },
+        { "code": 204, "icon": "error", "caption": "Device not found!" },
+        { "code": 205, "icon": "inactive", "caption": "Information incomplete" }
     ]
 }
