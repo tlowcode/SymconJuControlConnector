@@ -42,6 +42,8 @@ class WebClient
         curl_setopt($this->ch, CURLOPT_HEADER, TRUE);
         curl_setopt($this->ch, CURLOPT_AUTOREFERER, TRUE);
         curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($this->ch, CURLOPT_CONNECTTIMEOUT, 2);
+        curl_setopt($this->ch, CURLOPT_TIMEOUT, 5); //timeout in seconds
     }
 
     private function exec(): array
