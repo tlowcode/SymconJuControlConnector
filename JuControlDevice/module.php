@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../libs/Webclient.php';
+require_once __DIR__ . '/../libs/WebClient.php';
 require_once __DIR__ . '/../libs/DebugHelper.php';
 
 	class JuControlDevice extends IPSModule
@@ -64,8 +64,8 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
         private const VAR_IDENT_NEXT_SERVICE = 'nextService';
         private const VAR_IDENT_NEXT_SERVICE_DATE = 'nextServiceDate';
 
-        private const URL_MYJUDO_EU   = 'https://www.myjudo.eu';
-        private const URL_MY_JUDO_COM = 'https://www.my-judo.com:8124';
+        private const SERVER_KNM  = 'https://www.myjudo.eu:443/interface';
+        private const SERVER_JUDO = 'https://www.my-judo.com:8124';
 
         private const DT_I_SOFT_SAFE_PLUS = '0x33';
         private const DT_I_SOFT_PLUS = 'i-soft plus';
@@ -108,6 +108,14 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
             $this->RegisterProfileInteger('JCD.kg', '', '', ' kg', 0, 0, 0);
             $this->RegisterProfileInteger("JCD.Liter", "Wave", "", $this->Translate(' liters'), 0, 99999999, 1);
             $this->RegisterProfileInteger('JCD.Minutes.WSMaxPeriodOfUse', 'Clock', '', $this->Translate(' minutes'), 0, 600, 10);
+            $this->RegisterProfileInteger('JCD.Waterscene', "Drops", "", "", 0, 4, 0);
+            $this->RegisterProfileInteger('JCD.Liters.WSMaxQuantity', '', '', " l", 0, 3000, 100);
+            $this->RegisterProfileInteger('JCD.lph.WSMaxWaterFlow', '', '', " l/h", 0, 5000, 100);
+            IPS_SetVariableProfileAssociation('JCD.Waterscene', 0, $this->Translate('Normal mode'), 'Ok', 0x00FF00);
+            IPS_SetVariableProfileAssociation('JCD.Waterscene', 1, $this->Translate('Shower'), 'Shower', 0xFF9C00);
+            IPS_SetVariableProfileAssociation('JCD.Waterscene', 2, $this->Translate('Filling of heating'), 'Temperature', 0xFF9C00);
+            IPS_SetVariableProfileAssociation('JCD.Waterscene', 3, $this->Translate('Garden irrigation'), 'Drops', 0xFF9C00);
+            IPS_SetVariableProfileAssociation('JCD.Waterscene', 4, $this->Translate('Washing'), 'Pants', 0xFF9C00);
 
             //common variables
             $this->RegisterVariableString(self::VAR_IDENT_DEVICESTATE, $this->Translate('State'), "", ++$position);
@@ -118,8 +126,21 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
             $this->RegisterVariableInteger(self::VAR_IDENT_RANGESALTDAYS, $this->Translate('Range salt storage'), 'JCD.Days', ++$position);
             $this->RegisterVariableInteger(self::VAR_IDENT_CURRENTFLOW, $this->Translate('Water flow'), 'JCD.lph', ++$position);
             $this->RegisterVariableInteger(self::VAR_IDENT_WATERSTOP_MAXPERIODOFUSE, $this->Translate('Max. Period of Use'), 'JCD.Minutes.WSMaxPeriodOfUse', ++$position);
+
+            $this->RegisterVariableInteger(self::VAR_IDENT_WATERSTOP_MAXPERIODOFUSE, $this->Translate('Max. Period of Use'), 'JCD.Minutes.WSMaxPeriodOfUse', ++$position);
+            $this->RegisterVariableInteger(self::VAR_IDENT_WATERSTOP_MAXQUANTITY, $this->Translate('Max. Quantity'), 'JCD.Liters.WSMaxQuantity', ++$position);
+            $this->RegisterVariableInteger(self::VAR_IDENT_WATERSTOP_MAXWATERFLOW, $this->Translate('Max. Water Flow'), 'JCD.lph.WSMaxWaterFlow', ++$position);
             $this->RegisterVariableBoolean(self::VAR_IDENT_WATERSTOP, $this->Translate('Water stop'), '~Switch', ++$position);
             $this->RegisterVariableBoolean(self::VAR_IDENT_REGENERATION, $this->Translate('Regeneration'), '~Switch', ++$position);
+            $this->RegisterVariableInteger(self::VAR_IDENT_HARDNESS_NORMAL, $this->Translate('Water scene hardness \'Normal\''), 'JCD.dH_int', ++$position);
+            $this->RegisterVariableInteger(self::VAR_IDENT_HARDNESS_WASHING, $this->Translate('Water scene hardness \'Washing\''), 'JCD.dH_int', ++$position);
+            $this->RegisterVariableInteger(self::VAR_IDENT_HARDNESS_HEATER, $this->Translate('Water scene hardness \'Filling of heating\''), 'JCD.dH_int', ++$position);
+            $this->RegisterVariableInteger(self::VAR_IDENT_HARDNESS_WATERING, $this->Translate('Water scene hardness \'Garden irrigation\''), 'JCD.dH_int', ++$position);
+            $this->RegisterVariableInteger(self::VAR_IDENT_HARDNESS_SHOWER, $this->Translate('Water scene hardness \'Shower\''), 'JCD.dH_int', ++$position);
+            $this->RegisterVariableInteger(self::VAR_IDENT_TIME_WASHING, $this->Translate('Water scene time \'Washing\''), 'JCD.Hours', ++$position);
+            $this->RegisterVariableInteger(self::VAR_IDENT_TIME_HEATER, $this->Translate('Water scene time \'Filling of heating\''), 'JCD.Hours', ++$position);
+            $this->RegisterVariableInteger(self::VAR_IDENT_TIME_WATERING, $this->Translate('Water scene time \'Garden irrigation\''), 'JCD.Hours', ++$position);
+            $this->RegisterVariableInteger(self::VAR_IDENT_TIME_SHOWER, $this->Translate('Water scene time \'Shower\''), 'JCD.Hours', ++$position);
             $this->RegisterVariableInteger(self::VAR_IDENT_INSTALLATION_DATE, $this->Translate('Installation Date'), "~UnixTimestampDate", ++$position);
             $this->RegisterVariableInteger(self::VAR_IDENT_NEXT_SERVICE_DATE, $this->Translate('Next Service Date'), "~UnixTimestampDate", ++$position);
             $this->RegisterVariableInteger(self::VAR_IDENT_TOTAL_WATER, $this->Translate('Total water quantity'), "JCD.Liter", ++$position);
@@ -128,20 +149,27 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
             $this->RegisterVariableString("deviceSN", $this->Translate('Serial Number'), "", ++$position);
             $this->RegisterVariableString(self::VAR_IDENT_SWVERSION, $this->Translate('Software version'), "", ++$position);
             $this->RegisterVariableString(self::VAR_IDENT_HWVERSION, $this->Translate('Hardware version'), "", ++$position);
+            $this->RegisterVariableInteger(self::VAR_IDENT_ACTIVESCENE, $this->Translate('Active water scene'), "JCD.Waterscene", ++$position);
+
+            $this->EnableAction(self::VAR_IDENT_WATERSTOP);
+            $this->EnableAction(self::VAR_IDENT_WATERSTOP_MAXWATERFLOW);
+            $this->EnableAction(self::VAR_IDENT_WATERSTOP_MAXQUANTITY);
+            $this->EnableAction(self::VAR_IDENT_WATERSTOP_MAXPERIODOFUSE);
+            $this->EnableAction(self::VAR_IDENT_HARDNESS_NORMAL);
+            $this->EnableAction(self::VAR_IDENT_HARDNESS_WASHING);
+            $this->EnableAction(self::VAR_IDENT_HARDNESS_HEATER);
+            $this->EnableAction(self::VAR_IDENT_HARDNESS_WATERING);
+            $this->EnableAction(self::VAR_IDENT_HARDNESS_SHOWER);
+            $this->EnableAction(self::VAR_IDENT_TIME_WASHING);
+            $this->EnableAction(self::VAR_IDENT_TIME_HEATER);
+            $this->EnableAction(self::VAR_IDENT_TIME_WATERING);
+            $this->EnableAction(self::VAR_IDENT_TIME_SHOWER);
 
 
             if ($deviceType === self::DT_I_SOFT_SAFE_PLUS) {
                 //i-soft safe profiles
                 $this->RegisterProfileInteger("JCD.Minutes", "Clock", "", $this->Translate(' minutes'), 0, 0, 0);
                 $this->RegisterProfileInteger("JCD.Hours", "Clock", "", $this->Translate(' hours'), 0, 10, 1);
-                $this->RegisterProfileInteger('JCD.Liters.WSMaxQuantity', '', '', " l", 0, 3000, 100);
-                $this->RegisterProfileInteger('JCD.lph.WSMaxWaterFlow', '', '', " l/h", 0, 5000, 100);
-                $this->RegisterProfileInteger('JCD.Waterscene', "Drops", "", "", 0, 4, 0);
-                IPS_SetVariableProfileAssociation('JCD.Waterscene', 0, $this->Translate('Normal mode'), 'Ok', 0x00FF00);
-                IPS_SetVariableProfileAssociation('JCD.Waterscene', 1, $this->Translate('Shower'), 'Shower', 0xFF9C00);
-                IPS_SetVariableProfileAssociation('JCD.Waterscene', 2, $this->Translate('Filling of heating'), 'Temperature', 0xFF9C00);
-                IPS_SetVariableProfileAssociation('JCD.Waterscene', 3, $this->Translate('Garden irrigation'), 'Drops', 0xFF9C00);
-                IPS_SetVariableProfileAssociation('JCD.Waterscene', 4, $this->Translate('Washing'), 'Pants', 0xFF9C00);
                 $this->RegisterProfileInteger('JCD.WSHolidayMode', '', '', '', 0, 3, 0);
                 IPS_SetVariableProfileAssociation('JCD.WSHolidayMode', 0, $this->Translate('no holiday mode'), '', -1);
                 IPS_SetVariableProfileAssociation('JCD.WSHolidayMode', 1, $this->Translate('Holiday mode 1'), '', -1);
@@ -155,31 +183,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                 //i-soft safe variables
                 $this->RegisterVariableString("deviceID", $this->Translate('Device number'), "", ++$position);
 
-                $this->EnableAction(self::VAR_IDENT_WATERSTOP);
-                $this->EnableAction(self::VAR_IDENT_WATERSTOP_MAXPERIODOFUSE);
-
-                $this->RegisterVariableInteger(
-                    self::VAR_IDENT_WATERSTOP_MAXQUANTITY,
-                    $this->Translate('Max. Quantity'),
-                    'JCD.Liters.WSMaxQuantity',
-                    ++$position
-                );
-                $this->EnableAction(self::VAR_IDENT_WATERSTOP_MAXQUANTITY);
-
-                $this->RegisterVariableInteger(
-                    self::VAR_IDENT_WATERSTOP_MAXWATERFLOW,
-                    $this->Translate('Max. Water Flow'),
-                    'JCD.lph.WSMaxWaterFlow',
-                    ++$position
-                );
-                $this->EnableAction(self::VAR_IDENT_WATERSTOP_MAXWATERFLOW);
-
-                $this->RegisterVariableInteger(
-                    self::VAR_IDENT_WATERSTOP_HOLIDAYMODE,
-                    $this->Translate('Holiday mode'),
-                    'JCD.WSHolidayMode',
-                    ++$position
-                );
+                $this->RegisterVariableInteger(self::VAR_IDENT_WATERSTOP_HOLIDAYMODE, $this->Translate('Holiday mode'), 'JCD.WSHolidayMode', ++$position);
                 $this->EnableAction(self::VAR_IDENT_WATERSTOP_HOLIDAYMODE);
 
                 $this->RegisterVariableBoolean(self::VAR_IDENT_HOLIDAY, $this->Translate('Holiday'), '~Switch', ++$position);
@@ -188,18 +192,11 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                 $this->RegisterVariableBoolean(self::VAR_IDENT_SLEEPMODE, $this->Translate('Sleep mode'), '~Switch', ++$position);
                 $this->EnableAction(self::VAR_IDENT_SLEEPMODE);
 
-                $this->RegisterVariableInteger(
-                    self::VAR_IDENT_WATERSTOP_SLEEPMODEDURATION,
-                    $this->Translate('Sleep mode duration'),
-                    'JCD.Hours',
-                    ++$position
-                );
+                $this->RegisterVariableInteger(self::VAR_IDENT_WATERSTOP_SLEEPMODEDURATION, $this->Translate('Sleep mode duration'), 'JCD.Hours', ++$position);
                 $this->EnableAction(self::VAR_IDENT_WATERSTOP_SLEEPMODEDURATION);
 
                 $this->RegisterVariableInteger(self::VAR_IDENT_BATTERYSTATE, $this->Translate('Battery status'), '~Intensity.100', ++$position);
                 $this->RegisterVariableString(self::VAR_IDENT_BATTERYRUNTIME, $this->Translate('Batterielaufzeit (H:MM:SS)'), '', ++$position);
-                $this->RegisterVariableInteger(self::VAR_IDENT_ACTIVESCENE, $this->Translate('Active water scene'), "JCD.Waterscene", ++$position);
-                $this->EnableAction(self::VAR_IDENT_ACTIVESCENE);
 
                 $this->RegisterVariableString("ccuVersion", $this->Translate('Connectivity module version'), "", ++$position);
                 $this->RegisterVariableInteger(self::VAR_IDENT_NEXT_SERVICE, $this->Translate('Next service'), "JCD.Days", ++$position);
@@ -209,79 +206,10 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 
                 $this->RegisterVariableInteger("totalService", $this->Translate('Number of services'), "", ++$position);
 
-                $this->RegisterVariableInteger(
-                    self::VAR_IDENT_HARDNESS_NORMAL,
-                    $this->Translate('Water scene hardness \'Normal\''),
-                    'JCD.dH_int',
-                    ++$position
-                );
-                $this->EnableAction(self::VAR_IDENT_HARDNESS_NORMAL);
-
-                $this->RegisterVariableInteger(
-                    self::VAR_IDENT_HARDNESS_WASHING,
-                    $this->Translate('Water scene hardness \'Washing\''),
-                    'JCD.dH_int',
-                    ++$position
-                );
-                $this->EnableAction(self::VAR_IDENT_HARDNESS_WASHING);
-
-                $this->RegisterVariableInteger(
-                    self::VAR_IDENT_HARDNESS_HEATER,
-                    $this->Translate('Water scene hardness \'Filling of heating\''),
-                    'JCD.dH_int',
-                    ++$position
-                );
-                $this->EnableAction(self::VAR_IDENT_HARDNESS_HEATER);
-
-                $this->RegisterVariableInteger(
-                    self::VAR_IDENT_HARDNESS_WATERING,
-                    $this->Translate('Water scene hardness \'Garden irrigation\''),
-                    'JCD.dH_int',
-                    ++$position
-                );
-                $this->EnableAction(self::VAR_IDENT_HARDNESS_WATERING);
-
-                $this->RegisterVariableInteger(
-                    self::VAR_IDENT_HARDNESS_SHOWER,
-                    $this->Translate('Water scene hardness \'Shower\''),
-                    'JCD.dH_int',
-                    ++$position
-                );
-                $this->EnableAction(self::VAR_IDENT_HARDNESS_SHOWER);
-
-                $this->RegisterVariableInteger(
-                    self::VAR_IDENT_TIME_WASHING,
-                    $this->Translate('Water scene time \'Washing\''),
-                    'JCD.Hours',
-                    ++$position
-                );
-                $this->EnableAction(self::VAR_IDENT_TIME_WASHING);
-
-                $this->RegisterVariableInteger(
-                    self::VAR_IDENT_TIME_HEATER,
-                    $this->Translate('Water scene time \'Filling of heating\''),
-                    'JCD.Hours',
-                    ++$position
-                );
-                $this->EnableAction(self::VAR_IDENT_TIME_HEATER);
-
-                $this->RegisterVariableInteger(
-                    self::VAR_IDENT_TIME_WATERING,
-                    $this->Translate('Water scene time \'Garden irrigation\''),
-                    'JCD.Hours',
-                    ++$position
-                );
-                $this->EnableAction(self::VAR_IDENT_TIME_WATERING);
-
-                $this->RegisterVariableInteger(
-                    self::VAR_IDENT_TIME_SHOWER,
-                    $this->Translate('Water scene time \'Shower\''),
-                    'JCD.Hours',
-                    ++$position
-                );
-                $this->EnableAction(self::VAR_IDENT_TIME_SHOWER);
-
                 $this->RegisterVariableInteger("remainingTime", $this->Translate('Remaining time scene'), "JCD.Minutes", ++$position);
+
+                $this->EnableAction(self::VAR_IDENT_ACTIVESCENE); // the setting only works with i-soft SAFE+
+
             }
         }
 		public function ApplyChanges()
@@ -304,10 +232,190 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
             }
 		}
 
+        private function RequestAction_Plus(string $Ident, $Value):void
+        {
+
+            $url = self::SERVER_JUDO;
+
+            switch ($Ident) {
+                case self::VAR_IDENT_WATERSTOP:
+                    $data = [
+                        'group'     => 'waterstop',
+                        'command'   => 'valve',
+                        'parameter' => $Value ? 'close' : 'open'
+                    ];
+                    break;
+
+                case self::VAR_IDENT_ACTIVESCENE:
+                    $url = self::SERVER_KNM;
+                    $data = [
+                        'group'     => 'register',
+                        'command'   => 'set_optisoft_waterscene',
+                        'serialnumber' => $this->GetValue('deviceSN'),
+                        'parameter' => '',
+                        'time' => time() + 60*60
+                    ];
+                    switch ($Value) {
+                        case 0:
+                            $data['parameter'] = 'normal';
+                            break;
+                        case 1:
+                            $data['parameter'] = 'shower';
+                            break;
+                        case 2:
+                            $data['parameter'] = 'heaterfilling';
+                            break;
+                        case 3:
+                            $data['parameter'] = 'watering';
+                            break;
+                        case 4:
+                            $data['parameter'] = 'washing';
+                            break;
+                        default:
+                            trigger_error(sprintf('%s: invalid scene (%s)', __FUNCTION__, $Value), E_USER_ERROR);
+                    }
+                    break;
+
+                case self::VAR_IDENT_HARDNESS_NORMAL:
+                    $data = [
+                        'group'     => 'settings',
+                        'command'   => 'residual hardness',
+                        'parameter' => $Value
+                    ];
+                    break;
+
+                case self::VAR_IDENT_HARDNESS_HEATER:
+                    $url = self::SERVER_KNM;
+                    $data = [
+                        'group'     => 'register',
+                        'command'   => 'set waterscene heaterfilling',
+                        'serialnumber' => $this->GetValue('deviceSN'),
+                        'parameter' => $Value
+                    ];
+                    break;
+
+                case self::VAR_IDENT_HARDNESS_SHOWER:
+                    $url = self::SERVER_KNM;
+                    $data = [
+                        'group'     => 'register',
+                        'command'   => 'set waterscene shower',
+                        'serialnumber' => $this->GetValue('deviceSN'),
+                        'parameter' => $Value
+                    ];
+                    break;
+
+                case self::VAR_IDENT_HARDNESS_WASHING:
+                    $url = self::SERVER_KNM;
+                    $data = [
+                        'group'     => 'register',
+                        'command'   => 'set waterscene washing',
+                        'serialnumber' => $this->GetValue('deviceSN'),
+                        'parameter' => $Value
+                    ];
+                    break;
+
+                case self::VAR_IDENT_HARDNESS_WATERING:
+                    $url = self::SERVER_KNM;
+                    $data = [
+                        'group'     => 'register',
+                        'command'   => 'set waterscene watering',
+                        'serialnumber' => $this->GetValue('deviceSN'),
+                        'parameter' => $Value
+                    ];
+                    break;
+
+                case self::VAR_IDENT_TIME_HEATER:
+                    $url = self::SERVER_KNM;
+                    $data = [
+                        'group'     => 'register',
+                        'command'   => 'set_optisoft_waterscene_time_heater',
+                        'serialnumber' => $this->GetValue('deviceSN'),
+                        'parameter' => $Value
+                    ];
+                    break;
+
+                case self::VAR_IDENT_TIME_SHOWER:
+                    $url = self::SERVER_KNM;
+                    $data = [
+                        'group'     => 'register',
+                        'command'   => 'set_optisoft_waterscene_time',
+                        'serialnumber' => $this->GetValue('deviceSN'),
+                        'parameter' => $Value
+                    ];
+                    break;
+
+                case self::VAR_IDENT_TIME_WASHING:
+                    $url = self::SERVER_KNM;
+                    $data = [
+                        'group'     => 'register',
+                        'command'   => 'set_optisoft_waterscene_time_washing',
+                        'serialnumber' => $this->GetValue('deviceSN'),
+                        'parameter' => $Value
+                    ];
+                    break;
+
+                case self::VAR_IDENT_TIME_WATERING:
+                    $url = self::SERVER_KNM;
+                    $data = [
+                        'group'     => 'register',
+                        'command'   => 'set_optisoft_waterscene_time_garden',
+                        'serialnumber' => $this->GetValue('deviceSN'),
+                        'parameter' => $Value
+                    ];
+                    break;
+
+                case self::VAR_IDENT_WATERSTOP_MAXPERIODOFUSE:
+                    $data = [
+                        'group'     => 'waterstop',
+                        'command'   => 'abstraction time',
+                        'parameter' => $Value
+                    ];
+                    break;
+
+                case self::VAR_IDENT_WATERSTOP_MAXQUANTITY:
+                    $data = [
+                        'group'     => 'waterstop',
+                        'command'   => 'quantity',
+                        'parameter' => $Value
+                    ];
+                    break;
+
+                case self::VAR_IDENT_WATERSTOP_MAXWATERFLOW:
+                    $data = [
+                        'group'     => 'waterstop',
+                        'command'   => 'flow rate',
+                        'parameter' => $Value
+                    ];
+                    break;
+
+                default:
+                    trigger_error('Unexpected Ident: ' . $Ident, E_USER_WARNING);
+                    return;
+            }
+
+            $response = $this->SendCommand($url, $data);
+
+            $json = json_decode($response, false);
+
+            if (isset($json->status) && $json->status === 'ok') {
+                $this->SetValue($Ident, $Value);
+            }
+        }
 		/* wird aufgerufen, wenn eine Variable geändert wird */
 		public function RequestAction($Ident, $Value) {
 
             $this->SendDebug(__FUNCTION__, sprintf('Ident: %s, Value: %s', $Ident, $Value), 0);
+
+            switch ($this->ReadPropertyString(self::PROP_DEVICETYPE)) {
+                case self::DT_I_SOFT_SAFE_PLUS:
+                    break;
+
+                case self::DT_I_SOFT_PLUS:
+                    $this->RequestAction_Plus($Ident, $Value);
+                    return;
+
+                default:
+            }
 
 			$strSerialnumber = '&serialnumber=';
 
@@ -475,9 +583,9 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			}
 
 			if(isset($command)){
-				$deviceCommandUrl = self::URL_MYJUDO_EU . '/interface/?token=' . $this->ReadAttributeString(self::ATTR_ACCESSTOKEN_MYJUDOEU)
+				$deviceCommandUrl = self::SERVER_KNM . '/?token=' . $this->ReadAttributeString(self::ATTR_ACCESSTOKEN_MYJUDOEU)
 				. $strSerialnumber . $this->GetValue('deviceSN')
-				. '&group=register&command=' 
+				. '&group=register&command='
 				. $command;
                 if (isset($parameter)){
                     $deviceCommandUrl .= '&parameter=' . $parameter;
@@ -503,15 +611,19 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 
 		}
 
-		public function SendCommand (array $data)
+		public function SendCommand (string $url, array $data)
         {
             $wc = new WebClient();
             if (!isset($data['token'])){
-                $data['token'] = $this->ReadAttributeString(self::ATTR_ACCESSTOKEN_MYJUDOEU);
+                if ($url === self::SERVER_KNM){
+                    $data['token'] = $this->ReadAttributeString(self::ATTR_ACCESSTOKEN_MYJUDOEU);
+                } else {
+                    $data['token'] = $this->ReadAttributeString(self::ATTR_ACCESSTOKEN_MYJUDOCOM);
+                }
             }
-            $deviceDataUrl = self::URL_MYJUDO_EU . '/interface/?' . http_build_query($data);
-            //group=register&command=' . $command;
-            $this->SendDebug(__FUNCTION__, 'url: '. $deviceDataUrl, 0);
+            $deviceDataUrl = $url . '/?' . http_build_query($data);
+            $this->SendDebug(sprintf('%s:%s', __FUNCTION__, $data['command']), 'url: '. $deviceDataUrl, 0);
+
             $response = $wc->Navigate($deviceDataUrl);
 
             if ($response === FALSE) {
@@ -519,28 +631,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                 $this->LogMessage('Error during request to JuControl API: '. $deviceDataUrl, KL_ERROR);
                 return false;
             }
-            $this->SendDebug(__FUNCTION__, 'response: '. $response, 0);
-
-            return $response;
-        }
-
-        public function SendCommandMyJudoCom (array $data)
-        {
-            $wc = new WebClient();
-            if (!isset($data['token'])){
-                $data['token'] = $this->ReadAttributeString(self::ATTR_ACCESSTOKEN_MYJUDOCOM);
-            }
-            $deviceDataUrl = self::URL_MY_JUDO_COM . '/?' . http_build_query($data);
-            //group=register&command=' . $command;
-            $this->SendDebug(__FUNCTION__, 'url: '. $deviceDataUrl, 0);
-            $response = $wc->Navigate($deviceDataUrl);
-
-            if ($response === FALSE) {
-                $this->SendDebug(__FUNCTION__, 'url: '. $deviceDataUrl, 0);
-                $this->LogMessage('Error during request to JuControl API: '. $deviceDataUrl, KL_ERROR);
-                return false;
-            }
-            $this->SendDebug(__FUNCTION__, 'response: '. $response, 0);
+            $this->SendDebug(sprintf('%s:%s', __FUNCTION__, $data['command']), 'response: '. $response, 0);
 
             return $response;
         }
@@ -593,6 +684,12 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
             //Max Entnahmezeit
             $this->updateIfNecessary($this->dezimal2x8bitTo16bitDez($device['data']['Tableread 2'][17], $device['data']['Tableread 2'][16]), self::VAR_IDENT_WATERSTOP_MAXPERIODOFUSE);
 
+            //Max Menge
+            $this->updateIfNecessary($this->dezimal2x8bitTo16bitDez($device['data']['Tableread 2'][15], $device['data']['Tableread 2'][14]), self::VAR_IDENT_WATERSTOP_MAXQUANTITY);
+
+            //Max Durchfluss
+            $this->updateIfNecessary($this->dezimal2x8bitTo16bitDez($device['data']['Tableread 2'][13], $device['data']['Tableread 2'][12]), self::VAR_IDENT_WATERSTOP_MAXWATERFLOW);
+
             /* water stop */
             $this->updateIfNecessary((bool) $device['data']['Tableread 2'][0], self::VAR_IDENT_WATERSTOP);
 
@@ -601,8 +698,8 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 
             /* service date */
             if ($device['data']['service date'] === '0'){
-                $serviceResponse = json_decode($this->SendCommandMyJudoCom(['group' => 'contract',
-                                                'command' => 'service date']), true);
+                $serviceResponse = json_decode($this->SendCommand(self::SERVER_JUDO, ['group'   => 'contract',
+                                                                                      'command' => 'service date']), true);
                 if (isset($serviceResponse['data'])){
                     $lastService = (int) $serviceResponse['data'];
                     if ($lastService === 0){
@@ -800,26 +897,6 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
             $this->updateIfNecessary($maxZeit, self::VAR_IDENT_WATERSTOP_MAXPERIODOFUSE);
 
 
-            /* read target hardness of waterscenes */
-            $this->updateIfNecessary((int) $device['hardness_washing'], self::VAR_IDENT_HARDNESS_WASHING);
-            $this->updateIfNecessary((int) $device['hardness_shower'], self::VAR_IDENT_HARDNESS_SHOWER);
-            $this->updateIfNecessary((int) $device['hardness_watering'], self::VAR_IDENT_HARDNESS_WATERING);
-            $this->updateIfNecessary((int) $device['hardness_heater'], self::VAR_IDENT_HARDNESS_HEATER);
-            $this->updateIfNecessary((int) $device['waterscene_normal'], self::VAR_IDENT_HARDNESS_NORMAL);
-
-            /* read times of waterscenes */
-            if (isset($device['waterscene_time'])){
-                $this->updateIfNecessary((int) $device['waterscene_time'], self::VAR_IDENT_TIME_SHOWER);
-            }
-            if (isset($device['waterscene_time_garden'])){
-                $this->updateIfNecessary((int) $device['waterscene_time_garden'], self::VAR_IDENT_TIME_WATERING);
-            }
-            if (isset($device['waterscene_time_heater'])){
-                $this->updateIfNecessary((int) $device['waterscene_time_heater'], self::VAR_IDENT_TIME_HEATER);
-            }
-            if (isset($device['waterscene_time_washing'])){
-                $this->updateIfNecessary((int) $device['waterscene_time_washing'], self::VAR_IDENT_TIME_WASHING);
-            }
 
             /* read target hardness */
             $this->updateIfNecessary($this->getInValue($deviceData, 790, 8), self::VAR_IDENT_TARGET_HARDNESS);
@@ -870,8 +947,8 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
         public function RefreshData(): bool
 		{
 			try {
-				$response = $this->SendCommand(['group' => 'register',
-                                                'command' => 'get device data']);
+				$response = $this->SendCommand(self::SERVER_KNM, ['group'   => 'register',
+                                                                  'command' => 'get device data']);
 
 				if ($response === FALSE) {
                     return false;
@@ -910,6 +987,36 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                         return false;
                     }
 
+
+                    /* read target hardness of waterscenes */
+                    $this->updateIfNecessary((int) $device['hardness_washing'], self::VAR_IDENT_HARDNESS_WASHING);
+                    $this->updateIfNecessary((int) $device['hardness_shower'], self::VAR_IDENT_HARDNESS_SHOWER);
+                    $this->updateIfNecessary((int) $device['hardness_watering'], self::VAR_IDENT_HARDNESS_WATERING);
+                    $this->updateIfNecessary((int) $device['hardness_heater'], self::VAR_IDENT_HARDNESS_HEATER);
+                    $this->updateIfNecessary((int) $device['waterscene_normal'], self::VAR_IDENT_HARDNESS_NORMAL);
+
+                    /* read times of waterscenes */
+                    if (isset($device['waterscene_time'])){
+                        $this->updateIfNecessary((int) $device['waterscene_time'], self::VAR_IDENT_TIME_SHOWER);
+                    } else {
+                        $this->updateIfNecessary(2, self::VAR_IDENT_TIME_SHOWER);
+                    }
+                    if (isset($device['waterscene_time_garden'])){
+                        $this->updateIfNecessary((int) $device['waterscene_time_garden'], self::VAR_IDENT_TIME_WATERING);
+                    } else {
+                        $this->updateIfNecessary(2, self::VAR_IDENT_TIME_WATERING);
+                    }
+                    if (isset($device['waterscene_time_heater'])){
+                        $this->updateIfNecessary((int) $device['waterscene_time_heater'], self::VAR_IDENT_TIME_HEATER);
+                    } else {
+                        $this->updateIfNecessary(2, self::VAR_IDENT_TIME_HEATER);
+                    }
+                    if (isset($device['waterscene_time_washing'])){
+                        $this->updateIfNecessary((int) $device['waterscene_time_washing'], self::VAR_IDENT_TIME_WASHING);
+                    } else {
+                        $this->updateIfNecessary(2, self::VAR_IDENT_TIME_WASHING);
+                    }
+
                     /* Device Type */
                     $deviceType = $this->ReadPropertyString(self::PROP_DEVICETYPE);
 
@@ -932,25 +1039,30 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 
                         case self::DT_I_SOFT_PLUS:
 
-                            $this->SendCommandMyJudoCom(['group' => 'register',
-                                                                                     'parameter' => self::DT_I_SOFT_PLUS,
-                                                                                     'serial number' => $device['serialnumber'],
-                                                                                     'command' => 'disconnect']);
+                            $serialnumber = $device['serialnumber'];
+                            $this->SendCommand(self::SERVER_JUDO, ['group'         => 'register',
+                                                                   'parameter'     => self::DT_I_SOFT_PLUS,
+                                                                   'serial number' => $serialnumber,
+                                                                   'command'       => 'disconnect']);
 
-                            $this->SendCommandMyJudoCom(['group' => 'register',
-                                                                                     'parameter' => self::DT_I_SOFT_PLUS,
-                                                                                     'serial number' => $device['serialnumber'],
-                                                                                     'command' => 'connect']);
+                            $this->SendCommand(self::SERVER_JUDO, ['group'         => 'register',
+                                                                   'parameter'     => self::DT_I_SOFT_PLUS,
+                                                                   'serial number' => $serialnumber,
+                                                                   'command'       => 'connect']);
 
-                            $responseMyJudoCom_combinedData = $this->SendCommandMyJudoCom(['group' => 'device',
-                                                                                     'command' => 'combined data']);
-
-                            if ($responseMyJudoCom_combinedData === FALSE) {
-                                return false;
-                            }
+                            $responseMyJudoCom_combinedData = $this->SendCommand(
+                                self::SERVER_JUDO,
+                                [
+                                    'group'   => 'device',
+                                    'command' => 'combined data'
+                                ]
+                            );
 
                             $device = json_decode($responseMyJudoCom_combinedData, true);
 
+                            if (!isset($device['status']) || $device['status'] !== 'ok') {
+                                return false;
+                            }
 
                             if ($device['wtuType'] === $deviceType){
                                 $this->SetStatus(IS_ACTIVE);
@@ -964,6 +1076,44 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                             }
 
                             $this->RefreshData_iSoftPlus($device);
+
+                            $response_waterscene = $this->SendCommand(
+                                self::SERVER_KNM,
+                                [
+                                    'group'        => 'register',
+                                    'command'      => 'get_optisoft_waterscene',
+                                    'serialnumber' => $serialnumber
+                                ]
+                            );
+
+                            if ($response_waterscene === false) {
+                                return false;
+                            }
+
+                            $data = json_decode($response_waterscene, true)['data'];
+
+                            /* Active scene */
+                            switch ($data['waterscene']) {
+                                case 'shower':
+                                    $sceneValue = 1;
+                                    break;
+                                case 'heaterfilling':
+                                    $sceneValue = 2;
+                                    break;
+                                case 'watering':
+                                    $sceneValue = 3;
+                                    break;
+                                case 'washing':
+                                    $sceneValue = 4;
+                                    break;
+                                default:
+                                    $sceneValue = 0;
+                                    break;
+                            }
+                            $this->updateIfNecessary($sceneValue, self::VAR_IDENT_ACTIVESCENE);
+
+
+
                             break;
                     }
 
@@ -979,7 +1129,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			}
 
 			return true;
-		
+
 		}
 
 		private function Login(): bool
@@ -990,16 +1140,16 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			$username = $this->ReadPropertyString(self::PROP_USERNAME);
 			$passwd = $this->ReadPropertyString(self::PROP_PASSWORD);
 
-			$loginMyJudoEU = self::URL_MYJUDO_EU . '/interface/?group=register&command=login&name=login&user=' . $username . '&password=' . md5($passwd) . '&nohash=' . $passwd . '&role=customer';
-		
-			$this->SendDebug(__FUNCTION__, 'Trying to log in ' . self::URL_MYJUDO_EU . ' with username: '. $username, 0);
+			$loginMyJudoEU = self::SERVER_KNM . '/?group=register&command=login&name=login&user=' . $username . '&password=' . md5($passwd) . '&nohash=' . $passwd . '&role=customer';
+
+			$this->SendDebug(__FUNCTION__, 'Trying to log in ' . self::SERVER_KNM . ' with username: ' . $username, 0);
 
 			$responseMyJudoEU = $wc->Navigate($loginMyJudoEU);
             $this->SendDebug(__FUNCTION__, 'Response: '. $responseMyJudoEU, 0);
 
-            $loginMyJudoCom = self::URL_MY_JUDO_COM . '/?group=register&command=login&name=login&user=' . $username . '&password=' . urlencode($passwd) . '&role=customer';
+            $loginMyJudoCom = self::SERVER_JUDO . '/?group=register&command=login&name=login&user=' . $username . '&password=' . urlencode($passwd) . '&role=customer';
 
-            $this->SendDebug(__FUNCTION__, 'Trying to log in ' . self::URL_MY_JUDO_COM . ' with username: '. $username, 0);
+            $this->SendDebug(__FUNCTION__, 'Trying to log in ' . self::SERVER_JUDO . ' with username: ' . $username, 0);
 
             $responseMyJudoCom = $wc->Navigate($loginMyJudoCom);
             $this->SendDebug(__FUNCTION__, 'Response: '. $responseMyJudoCom, 0);
@@ -1016,7 +1166,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
             $jsonMyJudoCom = json_decode($responseMyJudoCom, false);
             if (isset($jsonMyJudoEU->status, $jsonMyJudoCom->status) && ($jsonMyJudoEU->status === 'ok') && ($jsonMyJudoCom->status === 'ok'))
             {
-                $this->SendDebug(__FUNCTION__, sprintf('Login successful, Token %s: %s, Token %s: %s', self::URL_MYJUDO_EU, $jsonMyJudoEU->token, self::URL_MY_JUDO_COM, $jsonMyJudoCom->token), 0);
+                $this->SendDebug(__FUNCTION__, sprintf('Login successful, Token %s: %s, Token %s: %s', self::SERVER_KNM, $jsonMyJudoEU->token, self::SERVER_JUDO, $jsonMyJudoCom->token), 0);
                 $this->WriteAttributeString(self::ATTR_ACCESSTOKEN_MYJUDOEU, $jsonMyJudoEU->token);
                 $this->WriteAttributeString(self::ATTR_ACCESSTOKEN_MYJUDOCOM, $jsonMyJudoCom->token);
                 $this->SetStatus(IS_ACTIVE);
@@ -1148,9 +1298,9 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                                     break;
 
 
-                                case 8: 
-                                case 10: 
-                                case 26: 
+                                case 8:
+                                case 10:
+                                case 26:
                                     $value =intval(substr($data, $subIndex*2, 2), 16);
                                     break;
 
@@ -1249,7 +1399,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			$endian = intval($endian, 16);      // convert string to hex
 			$endian = pack('L', $endian);       // pack hex to binary sting (unsinged long, machine byte order)
 			$endian = unpack($format, $endian); // convert binary sting to specified endian format
-		
+
 			return sprintf("%'.08x", $endian[1]); // return endian as a hex string (with padding zero)
 		}
 
@@ -1268,7 +1418,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 				}
 				IPS_SetVariableProfileIcon($Name, $Icon);
 				IPS_SetVariableProfileText($Name, $Prefix, $Suffix);
-				IPS_SetVariableProfileValues($Name, $MinValue, $MaxValue, $StepSize);        
+				IPS_SetVariableProfileValues($Name, $MinValue, $MaxValue, $StepSize);
 		}
 
 		private function RegisterProfileFloat($Name, $Icon, $Prefix, $Suffix, $MinValue, $MaxValue, $StepSize)
@@ -1282,7 +1432,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                 }
 				IPS_SetVariableProfileIcon($Name, $Icon);
 				IPS_SetVariableProfileText($Name, $Prefix, $Suffix);
-				IPS_SetVariableProfileValues($Name, $MinValue, $MaxValue, $StepSize);        
+				IPS_SetVariableProfileValues($Name, $MinValue, $MaxValue, $StepSize);
 		}
 
         private function RegisterProfileBoolean($Name, $Icon, $Prefix, $Suffix, $Associations)
