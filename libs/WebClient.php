@@ -32,7 +32,7 @@ class WebClient
         $this->close();
     }
 
-    private function init() 
+    private function init(): void
     {
         $this->ch = curl_init();
         curl_setopt($this->ch, CURLOPT_USERAGENT, "Mozilla/6.0 (Windows NT 6.2; WOW64; rv:16.0.1) Gecko/20121011 Firefox/16.0.1");
@@ -42,8 +42,8 @@ class WebClient
         curl_setopt($this->ch, CURLOPT_HEADER, TRUE);
         curl_setopt($this->ch, CURLOPT_AUTOREFERER, TRUE);
         curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, TRUE);
-        curl_setopt($this->ch, CURLOPT_CONNECTTIMEOUT, 2);
-        curl_setopt($this->ch, CURLOPT_TIMEOUT, 5); //timeout in seconds
+        curl_setopt($this->ch, CURLOPT_CONNECTTIMEOUT, 20);
+        curl_setopt($this->ch, CURLOPT_TIMEOUT, 30); //timeout in seconds
     }
 
     private function exec(): array
@@ -54,9 +54,9 @@ class WebClient
 
         $output = curl_exec($this->ch);
 
-        $retcode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
+        $httpcode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
 
-        if ($retcode === 200) {
+        if ($httpcode === 200) {
 
             $separatorpos = strpos($output, $separator);
 
@@ -73,16 +73,19 @@ class WebClient
                     $headers[$k] = $v;
                 }
             }
+        } else {
+            trigger_error(sprintf('%s: httpcode: %s', __FUNCTION__, (int)$httpcode), E_USER_WARNING);
         }
 
         // TODO: it would deserve to be tested extensively.
-        if (!empty($headers['Set-Cookie']))
+        if (!empty($headers['Set-Cookie'])) {
             $this->cookie = $headers['Set-Cookie'];
+        }
 
-        return array('Code' => $retcode, 'Headers' => $headers, 'Html' => $html);
+        return array('Code' => $httpcode, 'Headers' => $headers, 'Html' => $html);
     }
 
-    private function close()
+    private function close(): void
     {
         curl_close($this->ch);
     }

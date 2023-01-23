@@ -13,7 +13,7 @@ Instanz der Enthärtungsanlage.
 
 ### 1. Funktionsumfang
 
-Stellt die Verbindung zur Judo Wasserenthärtungsanlage her. Die Verbindung läuft über die API des Hersteller (myjudo) mittels Benutzername und Passwort. Aktuell werden folgende Gerätetypen unterstützt:en kann es zu Fehlfunktionen kommen.
+Stellt die Verbindung zur Judo Wasserenthärtungsanlage her. Die Verbindung läuft über die API des Hersteller (myjudo) mittels Benutzername und Passwort. Aktuell werden folgende Gerätetypen unterstützt:
 * Judo i-soft SAFE+
 * Judo i-soft plus
 
