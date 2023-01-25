@@ -23,8 +23,8 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
         private const PROP_REFRESHRATE = 'RefreshRate';
 
         //attributes
-        private const ATTR_ACCESSTOKEN_MYJUDOEU  = 'AccessTokenMyJudoEU';
-        private const ATTR_ACCESSTOKEN_MYJUDOCOM = 'AccessTokenMyJudoCom';
+        private const ATTR_TOKEN_KNM  = 'AccessTokenMyJudoEU';
+        private const ATTR_TOKEN_JUDO = 'AccessTokenMyJudoCom';
         private const ATTR_DEVICEDATA = 'DeviceData';
 
         //variable idents
@@ -76,8 +76,8 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			parent::Create();
 
             //attributes
-            $this->RegisterAttributeString(self::ATTR_ACCESSTOKEN_MYJUDOEU, "noToken");
-            $this->RegisterAttributeString(self::ATTR_ACCESSTOKEN_MYJUDOCOM, "noToken");
+            $this->RegisterAttributeString(self::ATTR_TOKEN_KNM, "noToken");
+            $this->RegisterAttributeString(self::ATTR_TOKEN_JUDO, "noToken");
             $this->RegisterAttributeString(self::ATTR_DEVICEDATA, '');
 
 			//timer
@@ -583,7 +583,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 			}
 
 			if(isset($command)){
-				$deviceCommandUrl = self::SERVER_KNM . '/?token=' . $this->ReadAttributeString(self::ATTR_ACCESSTOKEN_MYJUDOEU)
+				$deviceCommandUrl = self::SERVER_KNM . '/?token=' . $this->ReadAttributeString(self::ATTR_TOKEN_KNM)
 				. $strSerialnumber . $this->GetValue('deviceSN')
 				. '&group=register&command='
 				. $command;
@@ -616,22 +616,32 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
             $wc = new WebClient();
             if (!isset($data['token'])){
                 if ($url === self::SERVER_KNM){
-                    $data['token'] = $this->ReadAttributeString(self::ATTR_ACCESSTOKEN_MYJUDOEU);
+                    $data['token'] = $this->ReadAttributeString(self::ATTR_TOKEN_KNM);
                 } else {
-                    $data['token'] = $this->ReadAttributeString(self::ATTR_ACCESSTOKEN_MYJUDOCOM);
+                    $data['token'] = $this->ReadAttributeString(self::ATTR_TOKEN_JUDO);
                 }
             }
+
+            $dataLog = $data;
+            if (isset($dataLog['password'])){
+                $dataLog['password'] = '***';
+            }
+            if (isset($dataLog['nohash'])){
+                $dataLog['nohash'] = '***';
+            }
+
             $deviceDataUrl = $url . '/?' . http_build_query($data);
-            $this->SendDebug(sprintf('%s:%s', __FUNCTION__, $data['command']), 'url: '. $deviceDataUrl, 0);
+            $deviceDataUrlLog = $url . '/?' . http_build_query($dataLog);
+            $this->SendDebug(sprintf('%s: %s', __FUNCTION__, $data['command']), 'url: '. $deviceDataUrlLog, 0);
 
             $response = $wc->Navigate($deviceDataUrl);
 
             if ($response === FALSE) {
-                $this->SendDebug(__FUNCTION__, 'url: '. $deviceDataUrl, 0);
-                $this->LogMessage('Error during request to JuControl API: '. $deviceDataUrl, KL_ERROR);
+                $this->SendDebug(__FUNCTION__, 'ERROR url: '. $deviceDataUrlLog, 0);
+                $this->LogMessage('Error during request to JuControl API: '. $deviceDataUrlLog, KL_ERROR);
                 return false;
             }
-            $this->SendDebug(sprintf('%s:%s', __FUNCTION__, $data['command']), 'response: '. $response, 0);
+            $this->SendDebug(sprintf('%s: %s', __FUNCTION__, $data['command']), 'response: '. $response, 0);
 
             return $response;
         }
@@ -947,7 +957,16 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
         public function RefreshData(): bool
 		{
 			try {
-				$response = $this->SendCommand(self::SERVER_KNM, ['group'   => 'register',
+
+                if ($this->GetValue(self::VAR_IDENT_DEVICESTATE) !== 'online'){
+                    // if the device isn't online, first try to reconnect
+                    if (!$this->Login()){
+                        return false;
+                    }
+                }
+
+
+                $response = $this->SendCommand(self::SERVER_KNM, ['group'   => 'register',
                                                                   'command' => 'get device data']);
 
 				if ($response === FALSE) {
@@ -1135,25 +1154,31 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 		private function Login(): bool
         {
 
-			$wc = new WebClient();
-
 			$username = $this->ReadPropertyString(self::PROP_USERNAME);
 			$passwd = $this->ReadPropertyString(self::PROP_PASSWORD);
 
-			$loginMyJudoEU = self::SERVER_KNM . '/?group=register&command=login&name=login&user=' . $username . '&password=' . md5($passwd) . '&nohash=' . $passwd . '&role=customer';
+            $responseMyJudoEU = $this->SendCommand(
+                self::SERVER_KNM, [
+                                    'group'    => 'register',
+                                    'command'  => 'login',
+                                    'name'     => 'login',
+                                    'user'     => $username,
+                                    'password' => md5($passwd),
+                                    'nohash'   => $passwd,
+                                    'role'     => 'customer'
+                                ]
+            );
 
-			$this->SendDebug(__FUNCTION__, 'Trying to log in ' . self::SERVER_KNM . ' with username: ' . $username, 0);
-
-			$responseMyJudoEU = $wc->Navigate($loginMyJudoEU);
-            $this->SendDebug(__FUNCTION__, 'Response: '. $responseMyJudoEU, 0);
-
-            $loginMyJudoCom = self::SERVER_JUDO . '/?group=register&command=login&name=login&user=' . $username . '&password=' . urlencode($passwd) . '&role=customer';
-
-            $this->SendDebug(__FUNCTION__, 'Trying to log in ' . self::SERVER_JUDO . ' with username: ' . $username, 0);
-
-            $responseMyJudoCom = $wc->Navigate($loginMyJudoCom);
-            $this->SendDebug(__FUNCTION__, 'Response: '. $responseMyJudoCom, 0);
-
+            $responseMyJudoCom = $this->SendCommand(
+                self::SERVER_JUDO, [
+                                     'group'    => 'register',
+                                     'command'  => 'login',
+                                     'name'     => 'login',
+                                     'user'     => $username,
+                                     'password' => $passwd,
+                                     'role'     => 'customer'
+                                 ]
+            );
 
 
             if (!$responseMyJudoEU || !$responseMyJudoCom )
@@ -1167,8 +1192,8 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
             if (isset($jsonMyJudoEU->status, $jsonMyJudoCom->status) && ($jsonMyJudoEU->status === 'ok') && ($jsonMyJudoCom->status === 'ok'))
             {
                 $this->SendDebug(__FUNCTION__, sprintf('Login successful, Token %s: %s, Token %s: %s', self::SERVER_KNM, $jsonMyJudoEU->token, self::SERVER_JUDO, $jsonMyJudoCom->token), 0);
-                $this->WriteAttributeString(self::ATTR_ACCESSTOKEN_MYJUDOEU, $jsonMyJudoEU->token);
-                $this->WriteAttributeString(self::ATTR_ACCESSTOKEN_MYJUDOCOM, $jsonMyJudoCom->token);
+                $this->WriteAttributeString(self::ATTR_TOKEN_KNM, $jsonMyJudoEU->token);
+                $this->WriteAttributeString(self::ATTR_TOKEN_JUDO, $jsonMyJudoCom->token);
                 $this->SetStatus(IS_ACTIVE);
 
                 $refreshRate = $this->ReadPropertyInteger("RefreshRate");
@@ -1181,6 +1206,23 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                 $this->SetStatus(self::STATUS_INST_AUTHENTICATION_FAILED);
                 $this->SetTimerInterval("RefreshTimer", 0);
                 return false;
+            }
+
+            //check the serial number and sync the devices
+            if ($respShow = $this->SendCommand(self::SERVER_JUDO, ['group' => 'register', 'command' => 'show', 'application' => 'JC'])){
+                $data = json_decode($respShow, true)['data'];
+                $serialnumber = $this->ReadPropertyString(self::PROP_SERIALNUMBER);
+                if ($serialnumber && !in_array($serialnumber, array_column($data, 'serial number'), true)){
+                    $this->SetStatus(self::STATUS_INST_DEVICE_NOT_FOUND);
+                    return false;
+                }
+
+                if ($respSync = $this->SendCommand(self::SERVER_KNM, ['group' => 'register', 'command' => 'sync_judo_device', 'data' => $data])){
+                    $resp = json_decode($respSync, true);
+                    if ($resp['status'] !== 'ok'){
+                        return false;
+                    }
+                }
             }
 
             return true;
