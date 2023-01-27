@@ -409,19 +409,19 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                         return false;
                     }
 
-                    /* Device Type */
+/*                     /* Device Type
                     if ($json->data[0]->data[0]->dt === '0x33')
-                    {
+                    { */
                         $this->SetStatus(IS_ACTIVE);
                         $this->updateIfNecessary('i-soft safe', "deviceType");
-                    }
+/*                     }
                     else
                     {
                         $this->SetStatus(self::STATUS_INST_WRONG_DEVICETYPE);
                         $this->SendDebug(__FUNCTION__, 'Wrong device type (' . $json->data[0]->data[0]->dt . ') found -> Aborting!', KL_ERROR);
                         $this->SetTimerInterval("RefreshTimer", 0);
                         return false;
-                    }
+                    } */
 
                     /* Device S/N */
                     $this->updateIfNecessary($json->data[0]->serialnumber, "deviceSN");
