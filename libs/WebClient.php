@@ -73,8 +73,6 @@ class WebClient
                     $headers[$k] = $v;
                 }
             }
-        } else {
-            trigger_error(sprintf('%s: httpcode: %s', __FUNCTION__, (int)$httpcode), E_USER_WARNING);
         }
 
         // TODO: it would deserve to be tested extensively.

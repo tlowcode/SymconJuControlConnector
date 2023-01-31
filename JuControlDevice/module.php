@@ -1059,15 +1059,29 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                         case self::DT_I_SOFT_PLUS:
 
                             $serialnumber = $device['serialnumber'];
+
                             $this->SendCommand(self::SERVER_JUDO, ['group'         => 'register',
                                                                    'parameter'     => self::DT_I_SOFT_PLUS,
                                                                    'serial number' => $serialnumber,
                                                                    'command'       => 'disconnect']);
 
-                            $this->SendCommand(self::SERVER_JUDO, ['group'         => 'register',
+                            $responseMyJudoCom_connect = $this->SendCommand(self::SERVER_JUDO, ['group'         => 'register',
                                                                    'parameter'     => self::DT_I_SOFT_PLUS,
                                                                    'serial number' => $serialnumber,
                                                                    'command'       => 'connect']);
+
+                            if ($responseMyJudoCom_connect === false){
+                                return false;
+                            }
+
+                            $connect = json_decode($responseMyJudoCom_connect, true);
+
+                            if (!isset($connect['status']) || $connect['status'] !== 'ok') {
+                                // if the device isn't online, first try to reconnect
+                                if (!$this->Login()){
+                                    return false;
+                                }
+                            }
 
                             $responseMyJudoCom_combinedData = $this->SendCommand(
                                 self::SERVER_JUDO,
@@ -1076,6 +1090,10 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                                     'command' => 'combined data'
                                 ]
                             );
+
+                            if ($responseMyJudoCom_combinedData === false){
+                                return false;
+                            }
 
                             $device = json_decode($responseMyJudoCom_combinedData, true);
 
@@ -1223,6 +1241,18 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                         return false;
                     }
                 }
+
+                if ($this->ReadPropertyString(self::PROP_DEVICETYPE) == self::DT_I_SOFT_PLUS) {
+                    $responseMyJudoCom_connect = $this->SendCommand(self::SERVER_JUDO, ['group'         => 'register',
+                                                                                        'parameter'     => self::DT_I_SOFT_PLUS,
+                                                                                        'serial number' => $serialnumber,
+                                                                                        'command'       => 'connect']);
+
+                    if ($responseMyJudoCom_connect === false){
+                        return false;
+                    }
+                }
+
             }
 
             return true;
