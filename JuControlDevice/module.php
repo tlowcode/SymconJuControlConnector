@@ -164,6 +164,7 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
             $this->EnableAction(self::VAR_IDENT_TIME_HEATER);
             $this->EnableAction(self::VAR_IDENT_TIME_WATERING);
             $this->EnableAction(self::VAR_IDENT_TIME_SHOWER);
+            //$this->EnableAction(self::VAR_IDENT_ACTIVESCENE); funktioniert scheinbar über das Webfront nicht richtig.z.B. wird bei Garten immer gleich wieder auf normal zurückgeschaltet
 
 
             if ($deviceType === self::DT_I_SOFT_SAFE_PLUS) {
@@ -232,160 +233,161 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
             }
 		}
 
-        private function RequestAction_Plus(string $Ident, $Value):void
+        private function RequestAction_Plus(string $Ident, $Value): void
         {
-
             $url = self::SERVER_JUDO;
 
             switch ($Ident) {
                 case self::VAR_IDENT_WATERSTOP:
-                    $data = [
+                    $response = $this->SendCommand(self::SERVER_JUDO, [
                         'group'     => 'waterstop',
                         'command'   => 'valve',
                         'parameter' => $Value ? 'close' : 'open'
-                    ];
+                    ]);
                     break;
 
                 case self::VAR_IDENT_ACTIVESCENE:
-                    $url = self::SERVER_KNM;
-                    $data = [
-                        'group'     => 'register',
-                        'command'   => 'set_optisoft_waterscene',
-                        'serialnumber' => $this->GetValue('deviceSN'),
-                        'parameter' => '',
-                        'time' => time() + 60*60
-                    ];
                     switch ($Value) {
                         case 0:
-                            $data['parameter'] = 'normal';
+                            $parameter = 'normal';
                             break;
                         case 1:
-                            $data['parameter'] = 'shower';
+                            $parameter = 'shower';
                             break;
                         case 2:
-                            $data['parameter'] = 'heaterfilling';
+                            $parameter = 'heaterfilling';
                             break;
                         case 3:
-                            $data['parameter'] = 'watering';
+                            $parameter = 'watering';
                             break;
                         case 4:
-                            $data['parameter'] = 'washing';
+                            $parameter = 'washing';
                             break;
                         default:
                             trigger_error(sprintf('%s: invalid scene (%s)', __FUNCTION__, $Value), E_USER_ERROR);
                     }
+
+                    $response = $this->SendCommand(self::SERVER_KNM, [
+                        'group'        => 'register',
+                        'command'      => 'set_optisoft_waterscene',
+                        'serialnumber' => $this->GetValue('deviceSN'),
+                        'parameter'    => $parameter,
+                        'time'         => time() + 60 * 60
+                    ]);
                     break;
 
                 case self::VAR_IDENT_HARDNESS_NORMAL:
-                    $data = [
+                    $response = $this->SendCommand(self::SERVER_JUDO, [
                         'group'     => 'settings',
                         'command'   => 'residual hardness',
                         'parameter' => $Value
-                    ];
+                    ]);
+                    if (!$this->isResponseOK($response)){
+                        break;
+                    }
+
+                    $response = $this->SendCommand(self::SERVER_KNM, [
+                        'group'        => 'register',
+                        'command'   => 'set_optisoft_waterhardness',
+                        'serialnumber' => $this->GetValue('deviceSN'),
+                        'parameter' => $Value
+                    ]);
                     break;
 
                 case self::VAR_IDENT_HARDNESS_HEATER:
-                    $url = self::SERVER_KNM;
-                    $data = [
-                        'group'     => 'register',
-                        'command'   => 'set waterscene heaterfilling',
+                    $response = $this->SendCommand(self::SERVER_KNM, [
+                        'group'        => 'register',
+                        'command'      => 'set waterscene heaterfilling',
                         'serialnumber' => $this->GetValue('deviceSN'),
-                        'parameter' => $Value
-                    ];
+                        'parameter'    => $Value
+                    ]);
                     break;
 
                 case self::VAR_IDENT_HARDNESS_SHOWER:
-                    $url = self::SERVER_KNM;
-                    $data = [
-                        'group'     => 'register',
-                        'command'   => 'set waterscene shower',
+                    $response = $this->SendCommand(self::SERVER_KNM, [
+                        'group'        => 'register',
+                        'command'      => 'set waterscene shower',
                         'serialnumber' => $this->GetValue('deviceSN'),
-                        'parameter' => $Value
-                    ];
+                        'parameter'    => $Value
+                    ]);
                     break;
 
                 case self::VAR_IDENT_HARDNESS_WASHING:
-                    $url = self::SERVER_KNM;
-                    $data = [
-                        'group'     => 'register',
-                        'command'   => 'set waterscene washing',
+                    $response = $this->SendCommand(self::SERVER_KNM, [
+                        'group'        => 'register',
+                        'command'      => 'set waterscene washing',
                         'serialnumber' => $this->GetValue('deviceSN'),
-                        'parameter' => $Value
-                    ];
+                        'parameter'    => $Value
+                    ]);
                     break;
 
                 case self::VAR_IDENT_HARDNESS_WATERING:
-                    $url = self::SERVER_KNM;
-                    $data = [
-                        'group'     => 'register',
-                        'command'   => 'set waterscene watering',
+                    $response = $this->SendCommand(self::SERVER_KNM, [
+                        'group'        => 'register',
+                        'command'      => 'set waterscene watering',
                         'serialnumber' => $this->GetValue('deviceSN'),
-                        'parameter' => $Value
-                    ];
+                        'parameter'    => $Value
+                    ]);
                     break;
 
                 case self::VAR_IDENT_TIME_HEATER:
-                    $url = self::SERVER_KNM;
-                    $data = [
-                        'group'     => 'register',
-                        'command'   => 'set_optisoft_waterscene_time_heater',
+                    $response = $this->SendCommand(self::SERVER_KNM, [
+                        'group'        => 'register',
+                        'command'      => 'set_optisoft_waterscene_time_heater',
                         'serialnumber' => $this->GetValue('deviceSN'),
-                        'parameter' => $Value
-                    ];
+                        'parameter'    => $Value
+                    ]);
                     break;
 
                 case self::VAR_IDENT_TIME_SHOWER:
-                    $url = self::SERVER_KNM;
-                    $data = [
-                        'group'     => 'register',
-                        'command'   => 'set_optisoft_waterscene_time',
+                    $response = $this->SendCommand(self::SERVER_KNM, [
+                        'group'        => 'register',
+                        'command'      => 'set_optisoft_waterscene_time',
                         'serialnumber' => $this->GetValue('deviceSN'),
-                        'parameter' => $Value
-                    ];
+                        'parameter'    => $Value
+                    ]);
                     break;
 
                 case self::VAR_IDENT_TIME_WASHING:
-                    $url = self::SERVER_KNM;
-                    $data = [
-                        'group'     => 'register',
-                        'command'   => 'set_optisoft_waterscene_time_washing',
+                    $response = $this->SendCommand(self::SERVER_KNM, [
+                        'group'        => 'register',
+                        'command'      => 'set_optisoft_waterscene_time_washing',
                         'serialnumber' => $this->GetValue('deviceSN'),
-                        'parameter' => $Value
-                    ];
+                        'parameter'    => $Value
+                    ]);
                     break;
 
                 case self::VAR_IDENT_TIME_WATERING:
-                    $url = self::SERVER_KNM;
-                    $data = [
-                        'group'     => 'register',
-                        'command'   => 'set_optisoft_waterscene_time_garden',
+                    $response = $this->SendCommand(self::SERVER_KNM, [
+                        'group'        => 'register',
+                        'command'      => 'set_optisoft_waterscene_time_garden',
                         'serialnumber' => $this->GetValue('deviceSN'),
-                        'parameter' => $Value
-                    ];
+                        'parameter'    => $Value
+                    ]);
                     break;
 
                 case self::VAR_IDENT_WATERSTOP_MAXPERIODOFUSE:
-                    $data = [
+                    $response = $this->SendCommand(self::SERVER_JUDO, [
                         'group'     => 'waterstop',
                         'command'   => 'abstraction time',
                         'parameter' => $Value
-                    ];
+                    ]);
                     break;
 
                 case self::VAR_IDENT_WATERSTOP_MAXQUANTITY:
-                    $data = [
+                    $response = $this->SendCommand(self::SERVER_JUDO, [
                         'group'     => 'waterstop',
                         'command'   => 'quantity',
                         'parameter' => $Value
-                    ];
+                    ]);
                     break;
 
                 case self::VAR_IDENT_WATERSTOP_MAXWATERFLOW:
-                    $data = [
+                    $response = $this->SendCommand(self::SERVER_JUDO, [
                         'group'     => 'waterstop',
                         'command'   => 'flow rate',
                         'parameter' => $Value
-                    ];
+                    ]);
                     break;
 
                 default:
@@ -393,13 +395,14 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
                     return;
             }
 
-            $response = $this->SendCommand($url, $data);
-
-            $json = json_decode($response, false);
-
-            if (isset($json->status) && $json->status === 'ok') {
+            if ($this->isResponseOK($response)) {
                 $this->SetValue($Ident, $Value);
             }
+        }
+
+        private function isResponseOK(string $response): bool{
+            $json = json_decode($response, true);
+            return (isset($json['status']) && ($json['status'] === 'ok'));
         }
 		/* wird aufgerufen, wenn eine Variable geändert wird */
 		public function RequestAction($Ident, $Value) {
@@ -594,10 +597,11 @@ require_once __DIR__ . '/../libs/DebugHelper.php';
 				$this->SendDebug(__FUNCTION__, 'Requesting API URL '. $deviceCommandUrl, 0);
                 $wc = new WebClient();
 				$response = $wc->Navigate($deviceCommandUrl);
-				$json = json_decode($response, false);
+
+                $json = json_decode($response, false);
 				$this->SendDebug(__FUNCTION__, 'Received response from API: '. $response, 0);
 
-				if(isset($json->status) && $json->status === 'ok') {
+				if($this->isResponseOK($response)) {
 					$this->SetValue($Ident, $Value);
 				} else {
 					$this->SendDebug(__FUNCTION__, 'Error during request to JuControl API', 0);
