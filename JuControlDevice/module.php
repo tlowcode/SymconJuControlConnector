@@ -2,10 +2,29 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../libs/WebClient.php';
-require_once __DIR__ . '/../libs/DebugHelper.php';
+// Load the new modular architecture
+spl_autoload_register(function ($class) {
+    $prefix = 'JuControlDevice\\';
+    $baseDir = __DIR__ . '/src/';
+    
+    $len = strlen($prefix);
+    if (strncmp($prefix, $class, $len) !== 0) {
+        return;
+    }
+    
+    $relativeClass = substr($class, $len);
+    $file = $baseDir . str_replace('\\', '/', $relativeClass) . '.php';
+    
+    if (file_exists($file)) {
+        require $file;
+    }
+});
 
-	class JuControlDevice extends IPSModule
+// Include the new module
+require_once __DIR__ . '/src/JuControlDeviceModule.php';
+
+// Maintain backward compatibility
+class JuControlDevice extends JuControlDeviceModule
 	{
 
         //Status
