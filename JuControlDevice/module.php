@@ -20,6 +20,7 @@ spl_autoload_register(function ($class) {
     }
 });
 
+
 // Include the new module
 require_once __DIR__ . '/src/JuControlDeviceModule.php';
 
